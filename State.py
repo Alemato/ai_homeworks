@@ -19,9 +19,4 @@ class State:
         return hash(str(self.game_board))
 
     def __str__(self):
-        strs = "\n"
-        for i in range(4):
-            for j in range(4):
-                strs = strs + str(self.game_board[i][j]) + "\t"
-            strs = strs + "\n"
-        return strs
+        return self.game_board

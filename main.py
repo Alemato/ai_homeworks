@@ -33,7 +33,7 @@ def main():
     end_time = time.time()
     print(f"Risultato in : {(end_time - start_time) * 1000}ms")
     for s in backpath(state):
-        print(s)
+        print(game.print_board(s))
         print(s.move)
         print(f"h(n) = {s.h}")
         print(f"g(n) = {s.g}")

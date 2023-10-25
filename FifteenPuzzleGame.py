@@ -121,3 +121,12 @@ class FifteenPuzzleGame:
 
     def __hash__(self):
         return hash(str(self.game_board))
+
+    @staticmethod
+    def print_board(state: State):
+        strs = "\n"
+        for i in range(4):
+            for j in range(4):
+                strs = strs + str(state.game_board[i][j]) + "\t"
+            strs = strs + "\n"
+        return strs
