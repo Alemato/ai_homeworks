@@ -1,14 +1,11 @@
-import cairosvg
 import chess
-import chess.svg
-from IPython.core.display import Image, display
 
 from State import State
 
 
 class ChessGame:
     def __init__(self, game_board=None):
-        if game_board is not None:
+        if game_board is None:
             self.game_board = chess.Board()
         else:
             self.game_board = game_board
@@ -35,13 +32,6 @@ class ChessGame:
     @staticmethod
     def piece_map(game_board):
         return game_board.piece_map()
-
-    @staticmethod
-    def get_last_move(game_board):
-        if len(game_board.move_stack) > 0:
-            return game_board.move_stack[-1]
-        else:
-            return None
 
     @staticmethod
     def is_in_endgame_phase(game_board):
@@ -98,7 +88,7 @@ class ChessGame:
                 return outcome.termination
         return None
 
-    def winner_player_is(self, game_board):
+    def is_fist_player_turn(self, game_board):
         if self.is_victory(game_board):
             outcome = game_board.outcome()
             if outcome is not None:
@@ -128,13 +118,6 @@ class ChessGame:
     @staticmethod
     def print_board(state: State):
         return state.game_board
-
-    @staticmethod
-    def print_img_board(state: State):
-        svg_board = chess.svg.board(board=state.game_board, size=300)
-        svg_bytes = cairosvg.svg2png(svg_board)
-        if svg_bytes is not None:
-            display(Image(svg_bytes, width=300))
 
     def neighbors(self, state: State):
         neighbors_state = []

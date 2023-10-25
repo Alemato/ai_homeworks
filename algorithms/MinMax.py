@@ -1,8 +1,10 @@
 import numpy as np
 
+from State import State
+
 
 class MinMax:
-    def __init__(self, game, heuristic, max_depth):
+    def __init__(self, game, heuristic, max_depth=1):
         self.game = game
         self.heuristic = heuristic
         self.max_depth = max_depth
@@ -20,11 +22,12 @@ class MinMax:
     #
     # - lo stato con minimo punteggio H se il turno corrente è
     # del giocatore min
-    def pick(self, states, parent_turn):
+    @staticmethod
+    def pick(states, parent_turn):
         if parent_turn:
-            return max(states, key=lambda state: state.H)
+            return max(states, key=lambda state: state.h)
         else:
-            return min(states, key=lambda state: state.H)
+            return min(states, key=lambda state: state.h)
 
     # metodo che esegue la valutazione degli
     # stati `states` nel turno `parent_turn`
@@ -40,19 +43,21 @@ class MinMax:
             # portando ad un miglioramento della qualità di gioco
             # (questo controllo è stato testato sul gioco degli Scacchi, ma
             # potrebbe portare beneficio su qualsiasi altro gioco)
-            if state.can_claim_draw():
-                state.H = 0.0
+            if self.game.ask_draw(state.game_board):
+                state.h = 0.0
+                state.f = state.h
             else:
                 # se non viene chiesto un pareggio, proseguiamo normalmente
                 # con la valutazione
-                state.H = self.__minmax(state, self.max_depth - 1, not parent_turn)
+                state.h = self.__minmax(state, self.max_depth - 1, not parent_turn)
+                state.f = state.h
 
     # implementazione della valutazione MinMax
     def __minmax(self, state, depth, turn):
         self.eval_count += 1
 
-        if depth == 0 or state.is_endgame():
-            return self.heuristic.H(state)
+        if depth == 0 or self.game.is_endgame(state.game_board):
+            return self.heuristic.h(state)
 
         if turn:
             value = -np.inf
@@ -67,9 +72,9 @@ class MinMax:
 
     # metodo che esegue la ricerca del prossimo stato migliore
     # a partire dallo stato `state`
-    def search(self, state: TurnBasedState):
+    def search(self, state: State):
         children = self.__neighbors(state)
 
-        self.evaluate(children, state.turn())
+        self.evaluate(children, self.game.is_fist_player_turn(state.game_board))
 
-        return self.pick(children, state.turn())
+        return self.pick(children, self.game.is_fist_player_turn(state.game_board))
