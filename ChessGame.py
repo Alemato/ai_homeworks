@@ -1,4 +1,5 @@
 import chess
+import numpy as np
 
 from State import State
 
@@ -105,6 +106,34 @@ class ChessGame:
     @staticmethod
     def is_victory(game_board):
         return game_board.is_checkmate()
+
+    @staticmethod
+    def game_over_eval(game_board):
+        if game_board.is_checkmate():
+            if ChessGame.winner(game_board):
+                return np.inf
+            else:
+                return -np.inf
+        if ChessGame.patta(game_board):
+            return 0
+        return None
+
+    @staticmethod
+    def winner(game_board):
+        if game_board.is_checkmate():
+            outcome = game_board.outcome()
+            if outcome is not None:
+                return outcome.winner
+        return None
+
+    @staticmethod
+    def patta(game_board):
+        return (
+                game_board.is_fivefold_repetition()
+                or game_board.is_seventyfive_moves()
+                or game_board.is_insufficient_material()
+                or game_board.is_stalemate()
+        )
 
     @staticmethod
     def is_pareggio(game_board):

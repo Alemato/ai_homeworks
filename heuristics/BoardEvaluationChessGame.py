@@ -1,5 +1,6 @@
 import chess
 
+from ChessGame import ChessGame
 from State import State
 
 
@@ -22,15 +23,19 @@ class BoardEvaluationChessGame:
         Funzione euristica principale che combina diverse euristiche.
         """
         game_board = state.game_board
-        return sum(self.weights[name] * heuristic(game_board) for name, heuristic in {
-            "material": self.material_heuristic,
-            "mobility": self.mobility_heuristic,
-            "king_safety": self.king_safety_heuristic,
-            "pawn_structure": self.pawn_structure_heuristic,
-            "center_control": self.center_control_heuristic,
-            "piece_development": self.piece_development_heuristic,
-            "key_square_control": self.key_square_control_heuristic
-        }.items())
+        h_end_game = ChessGame.game_over_eval(state.game_board)
+        if h_end_game is not None:
+            return h_end_game
+        else:
+            return sum(self.weights[name] * heuristic(game_board) for name, heuristic in {
+                "material": self.material_heuristic,
+                "mobility": self.mobility_heuristic,
+                "king_safety": self.king_safety_heuristic,
+                "pawn_structure": self.pawn_structure_heuristic,
+                "center_control": self.center_control_heuristic,
+                "piece_development": self.piece_development_heuristic,
+                "key_square_control": self.key_square_control_heuristic
+            }.items())
 
     @staticmethod
     def material_heuristic(game_board):

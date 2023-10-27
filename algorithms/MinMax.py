@@ -75,6 +75,6 @@ class MinMax:
     def search(self, state: State):
         children = self.__neighbors(state)
 
-        self.evaluate(children, self.game.is_fist_player_turn(state.game_board))
-
-        return self.pick(children, self.game.is_fist_player_turn(state.game_board))
+        self.evaluate(children, state.game_board.turn)
+        print(state.game_board.turn)
+        return self.pick(children, state.game_board.turn)

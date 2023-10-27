@@ -24,7 +24,7 @@ class LastMoveChessGame:
         Funzione euristica principale che combina diverse euristiche basate sull'ultima mossa.
         """
         game_board = state.game_board
-        last_move = self.get_last_move(game_board)
+        last_move = LastMoveChessGame.get_last_move(game_board)
         return sum(self.weights[name] * heuristic(game_board, last_move) for name, heuristic in {
             "capture_value": self.capture_value_heuristic,
             "threat_creation": self.threat_creation_heuristic,
@@ -54,7 +54,7 @@ class LastMoveChessGame:
         return 0
 
     @staticmethod
-    def central_control_heuristic(self, game_board, move):
+    def central_control_heuristic(game_board, move):
         """Valuta se l'ultima mossa controlla il centro."""
         center_squares = [chess.D4, chess.D5, chess.E4, chess.E5]
         if move.to_square in center_squares:
