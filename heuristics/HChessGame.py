@@ -1,177 +1,217 @@
 import chess
 import numpy as np
 
+from ChessGame import ChessGame
 from State import State
 
 
 class HChessGame:
-    def __init__(self):
-        self.c1 = 0.35
-        self.c2 = 0.3
-        self.c3 = 0.2
-        self.c4 = 0.2
-        self.c5 = 0.5
-        self.c6 = 0.15
-        self.c7 = 0.15
-        self.c8 = 0.2
-        self.c9 = 0.15
-        self.c10 = 0.2
-        self.c11 = 0.35
-        self.c12 = 0.40
-        self.c13 = 0.80
-
-    PIECE_VALUES = {
-        'p': 100,
-        'n': 320,
-        'b': 330,
-        'r': 500,
-        'q': 900,
-        'k': 20000,
+    # Dictionary defining the intrinsic values for each chess piece.
+    piece_values = {
+        "p": 100,  # Value of a Pawn
+        "n": 320,  # Value of a Knight
+        "b": 330,  # Value of a Bishop
+        "r": 500,  # Value of a Rook
+        "q": 900,  # Value of a Queen
+        "k": 20000,  # Value of a King (set very high to represent its critical importance)
     }
 
-    PAWN_TABLE = [
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [50, 50, 50, 50, 50, 50, 50, 50],
-        [10, 10, 20, 30, 30, 20, 10, 10],
-        [5, 5, 10, 25, 25, 10, 5, 5],
-        [0, 0, 0, 20, 20, 0, 0, 0],
-        [5, -5, -10, 0, 0, -10, -5, 5],
-        [5, 10, 10, -20, -20, 10, 10, 5],
-        [0, 0, 0, 0, 0, 0, 0, 0]
+    # Piece-square table for the white pawn, defining values based on pawn's position on the board.
+    pawn_white_table = [
+        0, 0, 0, 0, 0, 0, 0, 0,
+        5, 10, 10, -20, -20, 10, 10, 5,
+        5, -5, -10, 0, 0, -10, -5, 5,
+        0, 0, 0, 20, 20, 0, 0, 0,
+        5, 5, 10, 25, 25, 10, 5, 5,
+        10, 10, 20, 30, 30, 20, 10, 10,
+        50, 50, 50, 50, 50, 50, 50, 50,
+        0, 0, 0, 0, 0, 0, 0, 0
     ]
 
-    PIECE_SQUARE_TABLES = {
-        'P': [0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 10, 10, 20, 30, 30, 20, 10, 10, 5, 5, 10, 25, 25,
-              10, 5, 5, 0, 0, 0, 20, 20, 0, 0, 0, 5, -5, -10, 0, 0, -10, -5, 5, 5, 10, 10, -20, -20, 10, 10, 5, 0, 0,
-              0, 0, 0, 0, 0, 0],
-        'N': [-50, -40, -30, -30, -30, -30, -40, -50, -40, -20, 0, 0, 0, 0, -20, -40, -30, 0, 10, 15, 15, 10, 0, -30,
-              -30, 5, 15, 20, 20, 15, 5, -30, -30, 0, 15, 20, 20, 15, 0, -30, -30, 5, 10, 15, 15, 10, 5, -30, -40, -20,
-              0, 5, 5, 0, -20, -40, -50, -40, -30, -30, -30, -30, -40, -50],
-        'B': [-20, -10, -10, -10, -10, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 10, 10, 5, 0, -10, -10, 5,
-              5, 10, 10, 5, 5, -10, -10, 0, 10, 10, 10, 10, 0, -10, -10, 10, 10, 10, 10, 10, 10, -10, -10, 5, 0, 0, 0,
-              0, 5, -10, -20, -10, -10, -10, -10, -10, -10, -20],
-        'R': [0, 0, 0, 0, 0, 0, 0, 0, 5, 10, 10, 10, 10, 10, 10, 5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5,
-              -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, 0, 0, 0, 5, 5, 0, 0, 0],
-        'Q': [-20, -10, -10, -5, -5, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 5, 5, 5, 0, -10, -5, 0, 5,
-              5, 5, 5, 0, -5, 0, 0, 5, 5, 5, 5, 0, -5, -10, 5, 5, 5, 5, 5, 0, -10, -10, 0, 5, 0, 0, 0, 0, -10, -20,
-              -10, -10, -5, -5, -10, -10, -20],
-        'K': {
-            'early': [-30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40,
-                      -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -20, -30, -30, -40, -40, -30,
-                      -30, -20, -10, -20, -20, -20, -20, -20, -20, -10, 20, 20, 0, 0, 0, 0, 20, 20, 20, 30, 10, 0, 0,
-                      10, 30, 20],
-            'end': [-50, -40, -30, -20, -20, -30, -40, -50, -30, -20, -10, 0, 0, -10, -20, -30, -30, -10, 20, 30, 30,
-                    20, -10, -30, -30, -10, 30, 40, 40, 30, -10, -30, -30, -10, 30, 40, 40, 30, -10, -30, -30, -10, 20,
-                    30, 30, 20, -10, -30, -30, -30, 0, 0, 0, 0, -30, -30, -50, -30, -30, -30, -30, -30, -30, -50]
-        }
+    # The black pawn's piece-square table is just a reversed version of the white pawn's table.
+    pawn_black_table = list(reversed(pawn_white_table))
+
+    # Piece-square table for the white knight.
+    knight_white_table = [
+        -50, -40, -30, -30, -30, -30, -40, -50,
+        -40, -20, 0, 5, 5, 0, -20, -40,
+        -30, 5, 10, 15, 15, 10, 5, -30,
+        -30, 0, 15, 20, 20, 15, 0, -30,
+        -30, 5, 15, 20, 20, 15, 5, -30,
+        -30, 0, 10, 15, 15, 10, 0, -30,
+        -40, -20, 0, 0, 0, 0, -20, -40,
+        -50, -40, -30, -30, -30, -30, -40, -50
+    ]
+
+    # The black knight's table is a reversed version of the white knight's table.
+    knight_black_table = list(reversed(knight_white_table))
+
+    # Piece-square table for the white bishop.
+    bishop_white_table = [
+        -20, -10, -10, -10, -10, -10, -10, -20,
+        -10, 5, 0, 0, 0, 0, 5, -10,
+        -10, 10, 10, 10, 10, 10, 10, -10,
+        -10, 0, 10, 10, 10, 10, 0, -10,
+        -10, 5, 5, 10, 10, 5, 5, -10,
+        -10, 0, 5, 10, 10, 5, 0, -10,
+        -10, 0, 0, 0, 0, 0, 0, -10,
+        -20, -10, -10, -10, -10, -10, -10, -20
+    ]
+
+    # The black bishop's table is a reversed version of the white bishop's table.
+    bishop_black_table = list(reversed(bishop_white_table))
+
+    # Piece-square table for the white rook.
+    rook_white_table = [
+        0, 0, 0, 5, 5, 0, 0, 0,
+        -5, 0, 0, 0, 0, 0, 0, -5,
+        -5, 0, 0, 0, 0, 0, 0, -5,
+        -5, 0, 0, 0, 0, 0, 0, -5,
+        -5, 0, 0, 0, 0, 0, 0, -5,
+        -5, 0, 0, 0, 0, 0, 0, -5,
+        5, 10, 10, 10, 10, 10, 10, 5,
+        0, 0, 0, 0, 0, 0, 0, 0
+    ]
+
+    # The black rook's table is a reversed version of the white rook's table.
+    rook_black_table = list(reversed(rook_white_table))
+
+    # Piece-square table for the white queen.
+    queen_white_table = [
+        -20, -10, -10, -5, -5, -10, -10, -20,
+        -10, 0, 0, 0, 0, 0, 0, -10,
+        -10, 5, 5, 5, 5, 5, 0, -10,
+        0, 0, 5, 5, 5, 5, 0, -5,
+        -5, 0, 5, 5, 5, 5, 0, -5,
+        -10, 0, 5, 5, 5, 5, 0, -10,
+        -10, 0, 0, 0, 0, 0, 0, -10,
+        -20, -10, -10, -5, -5, -10, -10, -20
+    ]
+
+    # The black queen's table is a reversed version of the white queen's table.
+    queen_black_table = list(reversed(queen_white_table))
+
+    # Piece-square table for the white king during the middle game.
+    king_white_table = [
+        20, 30, 10, 0, 0, 10, 30, 20,
+        20, 20, 0, 0, 0, 0, 20, 20,
+        -10, -20, -20, -20, -20, -20, -20, -10,
+        -20, -30, -30, -40, -40, -30, -30, -20,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30
+    ]
+
+    # The black king's table is a reversed version of the white king's table.
+    king_black_table = list(reversed(king_white_table))
+
+    # Piece-square table for the white king during the endgame.
+    king_white_table_endgame = [
+        -50, -30, -30, -30, -30, -30, -30, -50,
+        -30, -30, 0, 0, 0, 0, -30, -30,
+        -30, -10, 20, 30, 30, 20, -10, -30,
+        -30, -10, 30, 40, 40, 30, -10, -30,
+        -30, -10, 30, 40, 40, 30, -10, -30,
+        -30, -10, 20, 30, 30, 20, -10, -30,
+        -30, -20, -10, 0, 0, -10, -20, -30,
+        -50, -40, -30, -20, -20, -30, -40, -50
+    ]
+
+    # The black king's endgame table is a reversed version of the white king's endgame table.
+    king_black_table_endgame = list(reversed(king_white_table_endgame))
+
+    # A comprehensive dictionary containing piece-square tables for each piece and color.
+    # The tables indicate the value of placing a piece on a specific square.
+    piece_square_tables = {
+        "p": pawn_black_table,  # Black pawn
+        "n": knight_black_table,  # Black knight
+        "b": bishop_black_table,  # Black bishop
+        "r": rook_black_table,  # Black rook
+        "q": queen_black_table,  # Black queen
+        "k": {"early": king_black_table, "end": king_black_table_endgame},  # Black king (both middle game and endgame)
+
+        "P": pawn_white_table,  # White pawn
+        "N": knight_white_table,  # White knight
+        "B": bishop_white_table,  # White bishop
+        "R": rook_white_table,  # White rook
+        "Q": queen_white_table,  # White queen
+        "K": {"early": king_white_table, "end": king_white_table_endgame},  # White king (both middle game and endgame)
     }
 
-    PIECE_SQUARE_TABLES['p'] = [row for row in reversed(PIECE_SQUARE_TABLES['P'])]
-    PIECE_SQUARE_TABLES['n'] = [row for row in reversed(PIECE_SQUARE_TABLES['N'])]
-    PIECE_SQUARE_TABLES['b'] = [row for row in reversed(PIECE_SQUARE_TABLES['B'])]
-    PIECE_SQUARE_TABLES['r'] = [row for row in reversed(PIECE_SQUARE_TABLES['R'])]
-    PIECE_SQUARE_TABLES['q'] = [row for row in reversed(PIECE_SQUARE_TABLES['Q'])]
-    PIECE_SQUARE_TABLES['k'] = {"early": [row for row in reversed(PIECE_SQUARE_TABLES['K']['early'])],
-                                "end": [row for row in reversed(PIECE_SQUARE_TABLES['K']["end"])]}
+    # Constructor for the HChessGame class with specified weights for different heuristic components.
+    def __init__(self, c1=0.4, c2=0.6, c8=0.8, c4=0.4, c5=0.6, c6=0.4):
+        # Coefficients for weighting various aspects of the game state.
+        self.c1 = c1  # Weight for center control.
+        self.c2 = c2  # Weight for mobility.
+        self.c3 = 0.8  # Default weight for king safety (not passed as an argument).
+        self.c4 = c4  # Weight for rooks on open files.
+        self.c5 = c5  # Weight for check forks.
+        self.c6 = c6  # Weight for check pins.
+        self.c7 = 1  # Default weight for all piece values and piece square tables (constant value).
+        self.c8 = c8  # Weight for attack value.
 
+    # Static method to calculate the control of the center of the board.
     @staticmethod
-    def is_in_endgame_phase(game_board):
-        # Regine
-        white_queens = len(game_board.pieces(chess.QUEEN, chess.WHITE))
-        black_queens = len(game_board.pieces(chess.QUEEN, chess.BLACK))
-
-        # se entrambi i lati non hanno Regine -> endgame phase
-        if white_queens == 0 and black_queens == 0:
-            return True
-
-        # Pezzi minori
-        white_bishops = len(game_board.pieces(chess.BISHOP, chess.WHITE))
-        black_bishops = len(game_board.pieces(chess.BISHOP, chess.BLACK))
-        white_knights = len(game_board.pieces(chess.KNIGHT, chess.WHITE))
-        black_knights = len(game_board.pieces(chess.KNIGHT, chess.BLACK))
-        white_minors = white_bishops + white_knights
-        black_minors = black_bishops + black_knights
-
-        white_rooks = len(game_board.pieces(chess.ROOK, chess.WHITE))
-        black_rooks = len(game_board.pieces(chess.ROOK, chess.BLACK))
-
-        # se ogni lato che ha una regina, non ha altri pezzi oppure ha
-        # 1 pezzo minore al massimo -> endgame phase
-        # fmt: off
-        white_endgame_condition_with_queen = (
-                white_queens == 1 and (white_rooks == 0 and white_minors <= 1)
-        )
-        black_endgame_condition_with_queen = (
-                black_queens == 1 and (black_rooks == 0 and black_minors <= 1)
-        )
-        # fmt: on
-
-        if (
-                (white_endgame_condition_with_queen and black_queens == 0)
-                or (black_endgame_condition_with_queen and white_queens == 0)
-                or (
-                white_endgame_condition_with_queen
-                and black_endgame_condition_with_queen
-        )
-        ):
-            return True
-
-        return False
-
-    def material_value(self, state: State):
-        """Compute the material advantage of a State."""
-        game_board = state.game_board
+    def center_control(state: State):
+        board = state.game_board  # Access the chess board from the game state.
+        center_squares = [chess.D3, chess.E3, chess.D4, chess.E4]  # Define central squares on the chess board.
         value = 0
-        for square, piece in game_board.piece_map().items():
-            piece_symbol = piece.symbol()
-            if piece_symbol.isupper():
-                value += HChessGame.PIECE_VALUES.get(piece_symbol, 0)
-            elif piece_symbol.islower():
-                value -= HChessGame.PIECE_VALUES.get(piece_symbol.upper(), 0)
-        return value
-
-    def piece_position_value(self, state: State):
-        game_board = state.game_board
-        value = 0
-        for square, piece in game_board.piece_map().items():
-            y, x = divmod(square, 8)
-            piece_symbol = piece.symbol()
-            if piece_symbol == 'P':
-                value += HChessGame.PAWN_TABLE[y][x]
-            elif piece_symbol == 'p':
-                value -= HChessGame.PAWN_TABLE[y][x]
-        return value
-
-    def center_control(self, state: State):
-        game_board = state.game_board
-        center_squares = [chess.D3, chess.E3, chess.D4, chess.E4]
-        value = 0
+        # Iterate through central squares and calculate control value.
         for square in center_squares:
-            piece = game_board.piece_at(square)
+            piece = board.piece_at(square)
+            # Assign points based on the color of the piece occupying the center squares.
             if piece:
-                if piece.symbol().isupper():
-                    value += 10
-                else:
-                    value -= 10
+                value += 10 if piece.symbol().isupper() else -10
         return value
 
-    def mobility(self, state: State):
-        game_board = state.game_board
-        value = 0
-        for piece in game_board.piece_map().values():
-            if piece.symbol().isupper():
-                value += 1
-            else:
-                value -= 1
-        return value
+    # Static method to calculate the mobility of pieces on the board.
+    @staticmethod
+    def mobility(state: State):
+        board = state.game_board
+        mobility_value = 0
 
-    def king_safety(self, state: State):
-        game_board = state.game_board
-        value = 0
-        king_positions = {'K': game_board.king(chess.WHITE), 'k': game_board.king(chess.BLACK)}
-        rook_positions = {'R': list(game_board.pieces(chess.ROOK, chess.WHITE)),
-                          'r': list(game_board.pieces(chess.ROOK, chess.BLACK))}
+        # Iterate through all squares on the board.
+        for square in chess.SQUARES:
+            piece = board.piece_at(square)
+            if piece:
+                # Calculate the number of legal moves for the piece at the given square.
+                legal_moves = board.attacks(square)
+                num_moves = len(legal_moves)
 
+                # Assign a mobility score based on the type of the piece.
+                score = num_moves * HChessGame.get_piece_mobility_value(piece)
+                # Adjust the mobility value based on the color of the piece.
+                mobility_value += score if piece.color == board.turn else -score
+
+        return mobility_value
+
+    # Static method to assign mobility values to different types of chess pieces.
+    @staticmethod
+    def get_piece_mobility_value(piece):
+        # Define mobility values for each piece type.
+        piece_mobility_values = {
+            chess.PAWN: 1,
+            chess.KNIGHT: 3,
+            chess.BISHOP: 3,
+            chess.ROOK: 2,
+            chess.QUEEN: 1,
+            chess.KING: 1
+        }
+        # Return the mobility value for the given piece type.
+        return piece_mobility_values.get(piece.piece_type, 0)
+
+    # Static method to evaluate the safety of the king.
+    @staticmethod
+    def king_safety(state: State):
+        board = state.game_board
+        value = 0
+        # Identify the positions of the kings and rooks for both colors.
+        king_positions = {'K': board.king(chess.WHITE), 'k': board.king(chess.BLACK)}
+        rook_positions = {'R': list(board.pieces(chess.ROOK, chess.WHITE)),
+                          'r': list(board.pieces(chess.ROOK, chess.BLACK))}
+
+        # Calculate the king safety value based on the proximity of opposing rooks.
         for rook_pos in rook_positions['r']:
             if king_positions['K'] and (
                     rook_pos // 8 == king_positions['K'] // 8 or rook_pos % 8 == king_positions['K'] % 8):
@@ -184,212 +224,152 @@ class HChessGame:
 
         return value
 
-    def pawn_structure(self, state: State):
-        game_board = state.game_board
+    # Static method to evaluate the positioning of rooks on open files.
+    @staticmethod
+    def rooks_on_open_files(state: State):
+        board = state.game_board
         value = 0
-        for square, piece in game_board.piece_map().items():
-            y, x = divmod(square, 8)
-            if piece.symbol() in ['P', 'p']:
-                is_isolated = True
-                left_square = (y, x - 1) if x - 1 >= 0 else None
-                right_square = (y, x + 1) if x + 1 <= 7 else None
-                if left_square and game_board.piece_at(8 * left_square[0] + left_square[1]) == piece.symbol():
-                    is_isolated = False
-                if right_square and game_board.piece_at(8 * right_square[0] + right_square[1]) == piece.symbol():
-                    is_isolated = False
-                if is_isolated:
-                    value -= 10 if piece.symbol() == 'P' else 10
-        return value
-
-    def rooks_on_open_files(self, state: State):
-        game_board = state.game_board
-        value = 0
+        # Iterate through each file (column) on the chess board.
         for x in range(8):
             has_rook = False
             open_file = True
             rook_color = None
+            # Check each square in the file.
             for y in range(8):
-                piece = game_board.piece_at(8 * y + x)
+                piece = board.piece_at(8 * y + x)
+                # Determine if the file is open (no pawns) and if there is a rook.
                 if piece and piece.symbol() in ['P', 'p']:
                     open_file = False
                 if piece and piece.symbol() in ['R', 'r']:
                     has_rook = True
                     rook_color = piece.color
+            # Assign value based on the presence of a rook on an open file.
             if open_file and has_rook:
-                if rook_color == chess.WHITE:
-                    value += 25
-                else:
-                    value -= 25
+                value += 25 if rook_color == chess.WHITE else -25
         return value
 
+    # Static method to evaluate the game state for a win, loss, or draw.
     @staticmethod
-    def is_victory(game_board):
-        if game_board.is_checkmate():
-            if HChessGame.mario(game_board):
-                return np.inf
-            else:
-                return -np.inf
-        if HChessGame.patta(game_board):
+    def get_game_over_evaluation(state):
+        if state.is_victory():
+            # Assign a very high/low value for a victory/defeat.
+            return np.inf if state.winner() else -np.inf
+
+        if state.is_draw():
+            # Assign a neutral value for a draw.
             return 0
+
         return None
 
+    # Static method to evaluate the potential for forks in the game state.
     @staticmethod
-    def mario(game_board):
-        if game_board.is_checkmate():
-            outcome = game_board.outcome()
-            if outcome is not None:
-                return outcome.winner
-        return None
-
-    @staticmethod
-    def patta(game_board):
-        return (
-                game_board.is_fivefold_repetition()
-                or game_board.is_seventyfive_moves()
-                or game_board.is_insufficient_material()
-                or game_board.is_stalemate()
-        )
-
-    def check_forks(self, state: State):
-        game_board = state.game_board
+    def check_forks(state: State):
+        board = state.game_board
         forks_value = 0
 
-        for move in game_board.legal_moves:
-            game_board.push(move)
-            attacks_after_move = game_board.attackers(game_board.turn, move.to_square)
-            if len(attacks_after_move) > 1:  # More than one attacker implies a fork
+        # Iterate through all legal moves.
+        for move in board.legal_moves:
+            board.push(move)  # Make the move on the board.
+            # Check if the move results in a fork (more than one piece under attack).
+            attacks_after_move = board.attackers(board.turn, move.to_square)
+            if len(attacks_after_move) > 1:
                 forks_value += 10
-            game_board.pop()
+            board.pop()  # Revert the move.
 
         return forks_value
 
-    def check_pins(self, state: State):
-        game_board = state.game_board
+    # Static method to evaluate the potential for pins in the game state.
+    @staticmethod
+    def check_pins(state: State):
+        board = state.game_board
         pins_value = 0
-        opponent_color = not game_board.turn
+        opponent_color = not board.turn
 
-        # Check for each piece of the current player if it's pinned
+        # Check each piece of the current player to see if it's pinned.
         for square in chess.SQUARES:
-            piece = game_board.piece_at(square)
-            if piece and piece.color == game_board.turn:
-                attackers = game_board.attackers(opponent_color, square)
+            piece = board.piece_at(square)
+            if piece and piece.color == board.turn:
+                attackers = board.attackers(opponent_color, square)
                 for attacker_square in attackers:
-                    attacker_piece = game_board.piece_at(attacker_square)
-                    if game_board.is_pinned(game_board.turn, attacker_square):
+                    attacker_piece = board.piece_at(attacker_square)
+                    # Deduct points for each pinned piece.
+                    if board.is_pinned(board.turn, attacker_square):
                         pins_value -= 10
 
         return pins_value
 
-    def check_discovered_attacks(self, state: State):
-        game_board = state.game_board
-        discovered_value = 0
-
-        # Check for each piece of the current player if moving it would create a discovered attack
-        for square in chess.SQUARES:
-            piece = game_board.piece_at(square)
-            if piece and piece.color == game_board.turn:
-                for move in game_board.legal_moves:
-                    if move.from_square == square:
-                        game_board.push(move)
-                        if game_board.is_check():
-                            discovered_value += 10
-                        game_board.pop()
-
-        return discovered_value
-
-    CENTER_SQUARES = [chess.D4, chess.D5, chess.E4, chess.E5]
-
-    def piece_development(self, state: State):
-        game_board = state.game_board
+    # Static method to calculate the value of attacks on the board.
+    @staticmethod
+    def attack_value(state: State):
+        board = state.game_board
         value = 0
 
-        # Penalize knights and bishops that haven't moved from their starting positions
-        knight_bishop_initial_positions = [chess.B1, chess.G1, chess.B8, chess.G8,
-                                           chess.C1, chess.F1, chess.C8, chess.F8]
-
-        for square in knight_bishop_initial_positions:
-            piece = game_board.piece_at(square)
-            if piece and (piece.piece_type == chess.KNIGHT or piece.piece_type == chess.BISHOP):
-                value -= 10  # Decrease value for undeveloped piece
-
-        # Reward pieces that control the center
-        for square in HChessGame.CENTER_SQUARES:  # assuming HChessGame.CENTER_SQUARES is defined
-            if game_board.is_attacked_by(game_board.turn, square):
-                value += 5  # Increase value for controlling the center
-
-        # Check if the king has castled
-        if game_board.turn == chess.WHITE:
-            if not game_board.has_kingside_castling_rights(
-                    chess.WHITE) and not game_board.has_queenside_castling_rights(
-                chess.WHITE):
-                value += 20  # Assuming the white king has castled if it has no castling rights left
-        else:
-            if not game_board.has_kingside_castling_rights(
-                    chess.BLACK) and not game_board.has_queenside_castling_rights(
-                chess.BLACK):
-                value += 20  # Assuming the black king has castled if it has no castling rights left
-
-        return value
-
-    def attack_value(self, state: State):
-        game_board = state.game_board
-        value = 0
-
+        # Iterate through all squares on the board.
         for square in chess.SQUARES:
-            piece = game_board.piece_at(square)
+            piece = board.piece_at(square)
             if piece:
-                attacked_value = HChessGame.PIECE_VALUES.get(piece.symbol(), 0)
-                attackers_of_square = game_board.attackers(not game_board.turn, square)
+                # Calculate the value of the piece being attacked.
+                attacked_value = HChessGame.piece_values[piece.symbol().lower()]
+                attackers_of_square = board.attackers(not board.turn, square)
 
-                if piece.color == game_board.turn:
+                # Adjust the value based on the number and type of attackers.
+                if piece.color == board.turn:
                     value -= len(attackers_of_square) * attacked_value
-
                 else:
                     value += len(attackers_of_square) * attacked_value
 
-        if game_board.is_check():
+        # Add extra value if the opponent is in check.
+        if board.is_check():
             value += 20
 
         return value
 
-    def all_piece_values_and_piece_square_tables(self, state: State):
+    # Static method to evaluate all remaining pieces on the board using piece values and piece square tables.
+    @staticmethod
+    def all_piece_values_and_piece_square_tables(state: State):
         total = 0
-        endgame = HChessGame.is_in_endgame_phase(state.game_board)
+        endgame = ChessGame.is_in_endgame_phase(state.game_board)
+        # Iterate through each piece on the board.
         for square, piece in state.game_board.piece_map().items():
             piece_str = str(piece)
             piece_type = piece_str.lower()
             piece_value = 0
+            # Calculate the piece value based on its type and position.
             if piece.piece_type == chess.KING:
+                # Use different tables based on whether the game is in the endgame phase.
                 if not endgame:
                     piece_value = (
-                            self.PIECE_VALUES[piece_type]
-                            + self.PIECE_SQUARE_TABLES[piece_str]["early"][square]  # Access using two indices
+                            HChessGame.piece_values[piece_type]
+                            + HChessGame.piece_square_tables[piece_str]["early"][square]
                     )
                 else:
                     piece_value = (
-                            self.PIECE_VALUES[piece_type]
-                            + self.PIECE_SQUARE_TABLES[piece_str]["end"][square]  # Access using two indices
+                            HChessGame.piece_values[piece_type]
+                            + HChessGame.piece_square_tables[piece_str]["end"][square]
                     )
             else:
                 piece_value = (
-                        self.PIECE_VALUES[piece_type] + self.PIECE_SQUARE_TABLES[piece_str][square]
+                        HChessGame.piece_values[piece_type] + HChessGame.piece_square_tables[piece_str][square]
                 )
+            # Adjust the total value based on the color of the piece.
             total += piece_value if piece.color == chess.WHITE else -piece_value
         return total
 
+    # Method to estimate the value of a given chess state.
     def h(self, state: State):
-        h1 = HChessGame.is_victory(state.game_board)
+        # First, check if the game is over (win, loss, or draw).
+        h1 = ChessGame.game_over_eval(state.game_board)
         if h1 is not None:
             return h1
         else:
+            # Combine different heuristic components, weighted by their respective coefficients.
             return (
-                    self.c3 * self.center_control(state) +
-                    self.c4 * self.mobility(state) +
-                    self.c5 * self.king_safety(state) +
-                    self.c6 * self.pawn_structure(state) +
-                    self.c7 * self.rooks_on_open_files(state) +
-                    self.c8 * self.check_forks(state) +
-                    self.c9 * self.check_pins(state) +
-                    self.c10 * self.check_discovered_attacks(state) +
-                    self.c13 * self.all_piece_values_and_piece_square_tables(state)
+                    self.c1 * self.center_control(state) +
+                    self.c2 * self.mobility(state) +
+                    self.c3 * self.king_safety(state) +
+                    self.c4 * self.rooks_on_open_files(state) +
+                    self.c5 * self.check_forks(state) +
+                    self.c6 * self.check_pins(state) +
+                    self.c7 * self.all_piece_values_and_piece_square_tables(state) +
+                    self.c8 * self.attack_value(state)
             )

@@ -11,11 +11,6 @@ class MinMax:
         self.prune_count = 0
         self.eval_count = 0
 
-    # metodo che calcola i neighbors dello stato `state`
-    # passato come parametro
-    def __neighbors(self, state):
-        return self.game.neighbors(state)
-
     # metodo che estrae e ritorna dal set di stati `states`:
     # - lo stato con massimo punteggio H se il turno corrente è
     # del giocatore max
@@ -55,26 +50,25 @@ class MinMax:
     # implementazione della valutazione MinMax
     def __minmax(self, state, depth, turn):
         self.eval_count += 1
+        neighbors = self.game.neighbors(state)
 
         if depth == 0 or self.game.is_endgame(state.game_board):
             return self.heuristic.h(state)
 
         if turn:
             value = -np.inf
-            for child in self.__neighbors(state):
+            for child in neighbors:
                 value = max(value, self.__minmax(child, depth - 1, False))
             return value
         else:
             value = np.inf
-            for child in self.__neighbors(state):
+            for child in neighbors:
                 value = min(value, self.__minmax(child, depth - 1, True))
             return value
 
     # metodo che esegue la ricerca del prossimo stato migliore
     # a partire dallo stato `state`
     def search(self, state: State):
-        children = self.__neighbors(state)
-
-        self.evaluate(children, state.game_board.turn)
-        print(state.game_board.turn)
-        return self.pick(children, state.game_board.turn)
+        neighbors = self.game.neighbors(state)
+        self.evaluate(neighbors, state.game_board.turn)
+        return self.pick(neighbors, state.game_board.turn)
