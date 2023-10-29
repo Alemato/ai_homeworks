@@ -78,7 +78,7 @@ class MinMax:
         neighbors = self.game.neighbors(state)  # Get neighboring states from the current state.
 
         # Base cases: If the search depth is 0 or if the game is in an endgame state, return the heuristic value.
-        if depth == 0 or self.game.is_endgame(state.game_board):
+        if depth == 0 or state.is_endgame():
             return self.heuristic.h(state)
 
         if turn:
