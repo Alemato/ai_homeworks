@@ -9,8 +9,6 @@ class MinMax:
         game: An instance of a game object which provides interface methods for the game state and its neighbors.
         heuristic: An instance of a heuristic object used to evaluate game states.
         max_depth: The maximum depth for the minimax search. Default is 1.
-        prune_count: Count of the times pruning occurred during the search
-                    (not actively used in this class but reserved for possible extensions).
         eval_count: Count of the evaluations performed during the search.
         """
 
@@ -24,7 +22,6 @@ class MinMax:
         self.game = game
         self.heuristic = heuristic
         self.max_depth = max_depth
-        self.prune_count = 0
         self.eval_count = 0
 
     @staticmethod
