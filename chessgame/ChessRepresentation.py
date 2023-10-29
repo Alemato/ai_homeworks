@@ -2,16 +2,38 @@ import chess
 
 
 class ChessRepresentation:
+    """
+    Represents a chess game's board state and provides various utility methods
+    to interact with and evaluate the state of the board.
+
+    Attributes:
+        game_board (chess.Board): The current state of the chess board.
+    """
+
     def __init__(self, game_board=None):
+        """
+        Initializes the chess representation with an optional game board.
+        :param game_board: The initial state of the chess board.
+                Defaults to a new chess board if not provided.
+        """
         self.game_board = game_board
 
         if game_board is None:
             self.game_board = chess.Board()
 
     def is_victory(self):
+        """
+        Checks if the current state is a checkmate.
+        :return: True if it's checkmate, False otherwise.
+        """
         return self.game_board.is_checkmate()
 
     def winner(self):
+        """
+        Determines the winner of the game.
+        :return:True if White is the winner, False if Black is the winner,
+                None if no winner.
+        """
         if self.is_victory():
             outcome = self.game_board.outcome()
             if outcome is not None:
@@ -19,6 +41,11 @@ class ChessRepresentation:
         return None
 
     def get_name_winner_player(self):
+        """
+        Returns the name ("White" or "Black") of the winner.
+        :return: "White" if White is the winner, "Black" if Black is the winner,
+                None if no winner.
+        """
         if self.is_victory():
             outcome = self.game_board.outcome()
             if outcome is not None:
@@ -26,6 +53,10 @@ class ChessRepresentation:
         return None
 
     def is_in_endgame_phase(self):
+        """
+        Checks if the game is in the endgame phase based on certain conditions.
+        :return: True if the game is in the endgame phase, False otherwise.
+        """
         # Count the number of queens for each player.
         white_queens = len(self.game_board.pieces(chess.QUEEN, chess.WHITE))
         black_queens = len(self.game_board.pieces(chess.QUEEN, chess.BLACK))
@@ -63,6 +94,10 @@ class ChessRepresentation:
         return False
 
     def is_draw(self):
+        """
+        Checks if the game is a draw based on various conditions.
+        :return: True if the game is a draw, False otherwise.
+        """
         return (
                 self.game_board.is_stalemate()
                 or self.game_board.is_insufficient_material()
@@ -71,21 +106,47 @@ class ChessRepresentation:
         )
 
     def turn(self):
+        """
+        Returns the current player's turn.
+        :return: True if it's White's turn, False if it's Black's turn.
+        """
         return self.game_board.turn
 
     def can_claim_draw(self):
+        """
+        Checks if a draw can be claimed based on the current state.
+        :return: True if a draw can be claimed, False otherwise.
+        """
         return self.game_board.can_claim_draw()
 
     def is_game_over(self):
+        """
+        Checks if the game is over based on various conditions.
+        :return: True if the game is over, False otherwise.
+        """
         return self.game_board.is_game_over()
 
     def piece_map(self):
+        """
+        Returns a mapping of the pieces on the board.
+        :return: A dictionary mapping from square numbers to chess pieces.
+        """
         return self.game_board.piece_map()
 
     def get_all_legal_moves(self):
+        """
+        Returns all legal moves for the current position.
+        :return: A generator of all legal moves.
+        """
         return self.game_board.legal_moves
 
     def make_a_move(self, move):
+        """
+        Makes a move and returns a new chess representation if the move is legal.
+        :param move: The move to be made.
+        :return: A new chess representation after making the move.
+                None if the move is not legal.
+        """
         if move in self.get_all_legal_moves():
             new_game_board = self.game_board.copy()
             new_game_board.push(move)
