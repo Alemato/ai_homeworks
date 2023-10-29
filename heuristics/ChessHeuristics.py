@@ -2,153 +2,22 @@ import chess
 import numpy as np
 
 from StateChessGame import StateChessGame
+from ValuesDefinistions import *
 
 
-class HChessGame:
-    # Dictionary defining the intrinsic values for each chess piece.
-    piece_values = {
-        "p": 100,  # Value of a Pawn
-        "n": 320,  # Value of a Knight
-        "b": 330,  # Value of a Bishop
-        "r": 500,  # Value of a Rook
-        "q": 900,  # Value of a Queen
-        "k": 20000,  # Value of a King (set very high to represent its critical importance)
-    }
-
-    # Piece-square table for the white pawn, defining values based on pawn's position on the board.
-    pawn_white_table = [
-        0, 0, 0, 0, 0, 0, 0, 0,
-        5, 10, 10, -20, -20, 10, 10, 5,
-        5, -5, -10, 0, 0, -10, -5, 5,
-        0, 0, 0, 20, 20, 0, 0, 0,
-        5, 5, 10, 25, 25, 10, 5, 5,
-        10, 10, 20, 30, 30, 20, 10, 10,
-        50, 50, 50, 50, 50, 50, 50, 50,
-        0, 0, 0, 0, 0, 0, 0, 0
-    ]
-
-    # The black pawn's piece-square table is just a reversed version of the white pawn's table.
-    pawn_black_table = list(reversed(pawn_white_table))
-
-    # Piece-square table for the white knight.
-    knight_white_table = [
-        -50, -40, -30, -30, -30, -30, -40, -50,
-        -40, -20, 0, 5, 5, 0, -20, -40,
-        -30, 5, 10, 15, 15, 10, 5, -30,
-        -30, 0, 15, 20, 20, 15, 0, -30,
-        -30, 5, 15, 20, 20, 15, 5, -30,
-        -30, 0, 10, 15, 15, 10, 0, -30,
-        -40, -20, 0, 0, 0, 0, -20, -40,
-        -50, -40, -30, -30, -30, -30, -40, -50
-    ]
-
-    # The black knight's table is a reversed version of the white knight's table.
-    knight_black_table = list(reversed(knight_white_table))
-
-    # Piece-square table for the white bishop.
-    bishop_white_table = [
-        -20, -10, -10, -10, -10, -10, -10, -20,
-        -10, 5, 0, 0, 0, 0, 5, -10,
-        -10, 10, 10, 10, 10, 10, 10, -10,
-        -10, 0, 10, 10, 10, 10, 0, -10,
-        -10, 5, 5, 10, 10, 5, 5, -10,
-        -10, 0, 5, 10, 10, 5, 0, -10,
-        -10, 0, 0, 0, 0, 0, 0, -10,
-        -20, -10, -10, -10, -10, -10, -10, -20
-    ]
-
-    # The black bishop's table is a reversed version of the white bishop's table.
-    bishop_black_table = list(reversed(bishop_white_table))
-
-    # Piece-square table for the white rook.
-    rook_white_table = [
-        0, 0, 0, 5, 5, 0, 0, 0,
-        -5, 0, 0, 0, 0, 0, 0, -5,
-        -5, 0, 0, 0, 0, 0, 0, -5,
-        -5, 0, 0, 0, 0, 0, 0, -5,
-        -5, 0, 0, 0, 0, 0, 0, -5,
-        -5, 0, 0, 0, 0, 0, 0, -5,
-        5, 10, 10, 10, 10, 10, 10, 5,
-        0, 0, 0, 0, 0, 0, 0, 0
-    ]
-
-    # The black rook's table is a reversed version of the white rook's table.
-    rook_black_table = list(reversed(rook_white_table))
-
-    # Piece-square table for the white queen.
-    queen_white_table = [
-        -20, -10, -10, -5, -5, -10, -10, -20,
-        -10, 0, 0, 0, 0, 0, 0, -10,
-        -10, 5, 5, 5, 5, 5, 0, -10,
-        0, 0, 5, 5, 5, 5, 0, -5,
-        -5, 0, 5, 5, 5, 5, 0, -5,
-        -10, 0, 5, 5, 5, 5, 0, -10,
-        -10, 0, 0, 0, 0, 0, 0, -10,
-        -20, -10, -10, -5, -5, -10, -10, -20
-    ]
-
-    # The black queen's table is a reversed version of the white queen's table.
-    queen_black_table = list(reversed(queen_white_table))
-
-    # Piece-square table for the white king during the middle game.
-    king_white_table = [
-        20, 30, 10, 0, 0, 10, 30, 20,
-        20, 20, 0, 0, 0, 0, 20, 20,
-        -10, -20, -20, -20, -20, -20, -20, -10,
-        -20, -30, -30, -40, -40, -30, -30, -20,
-        -30, -40, -40, -50, -50, -40, -40, -30,
-        -30, -40, -40, -50, -50, -40, -40, -30,
-        -30, -40, -40, -50, -50, -40, -40, -30,
-        -30, -40, -40, -50, -50, -40, -40, -30
-    ]
-
-    # The black king's table is a reversed version of the white king's table.
-    king_black_table = list(reversed(king_white_table))
-
-    # Piece-square table for the white king during the endgame.
-    king_white_table_endgame = [
-        -50, -30, -30, -30, -30, -30, -30, -50,
-        -30, -30, 0, 0, 0, 0, -30, -30,
-        -30, -10, 20, 30, 30, 20, -10, -30,
-        -30, -10, 30, 40, 40, 30, -10, -30,
-        -30, -10, 30, 40, 40, 30, -10, -30,
-        -30, -10, 20, 30, 30, 20, -10, -30,
-        -30, -20, -10, 0, 0, -10, -20, -30,
-        -50, -40, -30, -20, -20, -30, -40, -50
-    ]
-
-    # The black king's endgame table is a reversed version of the white king's endgame table.
-    king_black_table_endgame = list(reversed(king_white_table_endgame))
-
-    # A comprehensive dictionary containing piece-square tables for each piece and color.
-    # The tables indicate the value of placing a piece on a specific square.
-    piece_square_tables = {
-        "p": pawn_black_table,  # Black pawn
-        "n": knight_black_table,  # Black knight
-        "b": bishop_black_table,  # Black bishop
-        "r": rook_black_table,  # Black rook
-        "q": queen_black_table,  # Black queen
-        "k": {"early": king_black_table, "end": king_black_table_endgame},  # Black king (both middle game and endgame)
-
-        "P": pawn_white_table,  # White pawn
-        "N": knight_white_table,  # White knight
-        "B": bishop_white_table,  # White bishop
-        "R": rook_white_table,  # White rook
-        "Q": queen_white_table,  # White queen
-        "K": {"early": king_white_table, "end": king_white_table_endgame},  # White king (both middle game and endgame)
-    }
-
-    # Constructor for the HChessGame class with specified weights for different heuristic components.
-    def __init__(self, c1=0.4, c2=0.6, c8=0.8, c4=0.4, c5=0.6, c6=0.4):
+# Definition of the ChessHeuristics class.
+class ChessHeuristics:
+    # Constructor for the ChessHeuristics class with specified weights for different heuristic components.
+    def __init__(self):
         # Coefficients for weighting various aspects of the game state.
-        self.c1 = c1  # Weight for center control.
-        self.c2 = c2  # Weight for mobility.
+        self.c1 = 0.4  # Weight for center control.
+        self.c2 = 0.6  # Weight for mobility.
         self.c3 = 0.8  # Default weight for king safety (not passed as an argument).
-        self.c4 = c4  # Weight for rooks on open files.
-        self.c5 = c5  # Weight for check forks.
-        self.c6 = c6  # Weight for check pins.
+        self.c4 = 0.8  # Weight for rooks on open files.
+        self.c5 = 0.4  # Weight for check forks.
+        self.c6 = 0.6  # Weight for check pins.
         self.c7 = 1  # Default weight for all piece values and piece square tables (constant value).
-        self.c8 = c8  # Weight for attack value.
+        self.c8 = 0.4  # Weight for attack value.
 
     # Static method to calculate the control of the center of the board.
     @staticmethod
@@ -179,7 +48,7 @@ class HChessGame:
                 num_moves = len(legal_moves)
 
                 # Assign a mobility score based on the type of the piece.
-                score = num_moves * HChessGame.get_piece_mobility_value(piece)
+                score = num_moves * ChessHeuristics.get_piece_mobility_value(piece)
                 # Adjust the mobility value based on the color of the piece.
                 mobility_value += score if piece.color == board.turn else -score
 
@@ -308,7 +177,7 @@ class HChessGame:
             piece = board.piece_at(square)
             if piece:
                 # Calculate the value of the piece being attacked.
-                attacked_value = HChessGame.piece_values[piece.symbol().lower()]
+                attacked_value = piece_values[piece.symbol().lower()]
                 attackers_of_square = board.attackers(not board.turn, square)
 
                 # Adjust the value based on the number and type of attackers.
@@ -329,7 +198,7 @@ class HChessGame:
         total = 0
         endgame = state.game_representation.is_in_endgame_phase()
         # Iterate through each piece on the board.
-        for square, piece in state.game_representation.game_board.piece_map().items():
+        for square, piece in state.game_representation.piece_map().items():
             piece_str = str(piece)
             piece_type = piece_str.lower()
             piece_value = 0
@@ -338,17 +207,17 @@ class HChessGame:
                 # Use different tables based on whether the game is in the endgame phase.
                 if not endgame:
                     piece_value = (
-                            HChessGame.piece_values[piece_type]
-                            + HChessGame.piece_square_tables[piece_str]["early"][square]
+                            piece_values[piece_type]
+                            + piece_square_tables[piece_str]["early"][square]
                     )
                 else:
                     piece_value = (
-                            HChessGame.piece_values[piece_type]
-                            + HChessGame.piece_square_tables[piece_str]["end"][square]
+                            piece_values[piece_type]
+                            + piece_square_tables[piece_str]["end"][square]
                     )
             else:
                 piece_value = (
-                        HChessGame.piece_values[piece_type] + HChessGame.piece_square_tables[piece_str][square]
+                        piece_values[piece_type] + piece_square_tables[piece_str][square]
                 )
             # Adjust the total value based on the color of the piece.
             total += piece_value if piece.color == chess.WHITE else -piece_value
@@ -357,7 +226,7 @@ class HChessGame:
     # Method to estimate the value of a given chess state.
     def h(self, state: StateChessGame):
         # First, check if the game is over (win, loss, or draw).
-        h1 = state.game_over_eval()
+        h1 = self.get_game_over_evaluation(state)
         if h1 is not None:
             return h1
         else:
@@ -372,3 +241,97 @@ class HChessGame:
                     self.c7 * self.all_piece_values_and_piece_square_tables(state) +
                     self.c8 * self.attack_value(state)
             )
+
+
+"""
+Risultato: Termination.CHECKMATE
+Vincitore: White
+Tempo: 12281.008005142212
+Tempo medio mossa: 101.40227680363931
+Numero Mosse: 121
+Stati valutati        (agente 1): 38844
+Potature effettuate   (agente 1): 0
+
+Stati valutati        (agente 2): 23503
+Potature effettuate   (agente 2): 6
+
+
+Risultato: Termination.CHECKMATE
+Vincitore: White
+Tempo: 6291.694641113281
+Tempo medio mossa: 118.62042714964669
+Numero Mosse: 53
+Stati valutati        (agente 1): 20270
+Potature effettuate   (agente 1): 0
+
+Stati valutati        (agente 2): 16609
+Potature effettuate   (agente 2): 15
+
+
+
+dept3 tutti par a 1:
+
+Risultato: Termination.CHECKMATE
+Vincitore: Black
+Tempo: 100752.11811065674
+Tempo medio mossa: 2963.2121324539185
+Numero Mosse: 34
+Stati valutati        (agente 1): 117227
+Potature effettuate   (agente 1): 12527
+
+Stati valutati        (agente 2): 371405
+Potature effettuate   (agente 2): 14028
+
+
+
+        self.c3 * self.center_control(state) +
+        self.c4 * self.mobility(state) +
+        self.c5 * self.king_safety(state) +
+        self.c7 * self.rooks_on_open_files(state) +
+        self.c8 * self.check_forks(state) +
+        self.c9 * self.check_pins(state) +
+        self.c11 * self.all_piece_values_and_piece_square_tables(state) +
+        self.c13 * self.attack_value(state)
+        self.c3 = 0.6
+        self.c4 = 0.6
+        self.c5 = 0.8
+        self.c7 = 0.2
+        self.c8 = 0.2
+        self.c9 = 0.2
+        self.c11 = 1
+        self.c13 = 0.8
+
+Risultato: Termination.CHECKMATE
+Vincitore: Black
+Tempo: 197453.36413383484
+Tempo medio mossa: 5807.360614047331
+Numero Mosse: 34
+Stati valutati        (agente 1): 117810
+Potature effettuate   (agente 1): 12519
+
+Stati valutati        (agente 2): 370659
+Potature effettuate   (agente 2): 14044
+
+
+
+        self.c3 * self.center_control(state) +
+        self.c4 * self.mobility(state) +
+        self.c5 * self.king_safety(state) +
+        self.c7 * self.rooks_on_open_files(state) +
+        self.c8 * self.check_forks(state) +
+        self.c9 * self.check_pins(state) +
+        self.c11 * self.all_piece_values_and_piece_square_tables(state) +
+        self.c13 * self.attack_value(state)
+        TUTTE A 1
+
+Risultato: Termination.CHECKMATE
+Vincitore: Black
+Tempo: 192443.1357383728
+Tempo medio mossa: 5660.007028018727
+Numero Mosse: 34
+Stati valutati        (agente 1): 116614
+Potature effettuate   (agente 1): 12569
+
+Stati valutati        (agente 2): 370579
+Potature effettuate   (agente 2): 14039
+"""

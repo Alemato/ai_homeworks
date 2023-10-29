@@ -1,6 +1,5 @@
 from .BoardEvaluationChessGame import *
 from .HChessGame import *
 from .LastMoveChessGame import *
-from .ManhattanDistancePuzzleGame import *
-from .MisplacedTilesPuzzleGame import *
 from .SimpleBoardEvaluationChessGame import *
+from .ChessHeuristics import *

@@ -38,14 +38,12 @@ class MinMax:
             # portando ad un miglioramento della qualità di gioco
             # (questo controllo è stato testato sul gioco degli Scacchi, ma
             # potrebbe portare beneficio su qualsiasi altro gioco)
-            if self.game.ask_draw(state.game_board):
+            if state.can_claim_draw():
                 state.h = 0.0
-                state.f = state.h
             else:
                 # se non viene chiesto un pareggio, proseguiamo normalmente
                 # con la valutazione
                 state.h = self.__minmax(state, self.max_depth - 1, not parent_turn)
-                state.f = state.h
 
     # implementazione della valutazione MinMax
     def __minmax(self, state, depth, turn):
@@ -68,7 +66,7 @@ class MinMax:
 
     # metodo che esegue la ricerca del prossimo stato migliore
     # a partire dallo stato `state`
-    def search(self, state: State):
+    def search(self, state):
         neighbors = self.game.neighbors(state)
-        self.evaluate(neighbors, state.game_board.turn)
-        return self.pick(neighbors, state.game_board.turn)
+        self.evaluate(neighbors, state.turn())
+        return self.pick(neighbors, state.turn())

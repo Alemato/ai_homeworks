@@ -1,101 +1,100 @@
 import chess
 
-from ChessGame import ChessGame
-from State import State
+from StateChessGame import StateChessGame
+
+PIECE_VALUES = {
+    chess.PAWN: 1,
+    chess.KNIGHT: 3,
+    chess.BISHOP: 3,
+    chess.ROOK: 5,
+    chess.QUEEN: 9,
+    chess.KING: 0  # Il re ha un valore speciale
+}
+
+# Tabelle di pezzi
+PAWN_TABLE = [
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [5, 10, 10, -20, -20, 10, 10, 5],
+    [5, -5, -10, 0, 0, -10, -5, 5],
+    [0, 0, 0, 20, 20, 0, 0, 0],
+    [5, 5, 10, 25, 25, 10, 5, 5],
+    [10, 10, 20, 30, 30, 20, 10, 10],
+    [50, 50, 50, 50, 50, 50, 50, 50],
+    [0, 0, 0, 0, 0, 0, 0, 0]
+]
+
+KNIGHT_TABLE = [
+    [-50, -40, -30, -30, -30, -30, -40, -50],
+    [-40, -20, 0, 5, 5, 0, -20, -40],
+    [-30, 5, 10, 15, 15, 10, 5, -30],
+    [-30, 0, 15, 20, 20, 15, 0, -30],
+    [-30, 5, 15, 20, 20, 15, 5, -30],
+    [-30, 0, 10, 15, 15, 10, 0, -30],
+    [-40, -20, 0, 0, 0, 0, -20, -40],
+    [-50, -40, -30, -30, -30, -30, -40, -50]
+]
+
+BISHOP_TABLE = [
+    [-20, -10, -10, -10, -10, -10, -10, -20],
+    [-10, 5, 0, 0, 0, 0, 5, -10],
+    [-10, 10, 10, 10, 10, 10, 10, -10],
+    [-10, 0, 10, 10, 10, 10, 0, -10],
+    [-10, 5, 5, 10, 10, 5, 5, -10],
+    [-10, 0, 5, 10, 10, 5, 0, -10],
+    [-10, 0, 0, 0, 0, 0, 0, -10],
+    [-20, -10, -10, -10, -10, -10, -10, -20]
+]
+
+ROOK_TABLE = [
+    [0, 0, 0, 5, 5, 0, 0, 0],
+    [-5, 0, 0, 0, 0, 0, 0, -5],
+    [-5, 0, 0, 0, 0, 0, 0, -5],
+    [-5, 0, 0, 0, 0, 0, 0, -5],
+    [-5, 0, 0, 0, 0, 0, 0, -5],
+    [-5, 0, 0, 0, 0, 0, 0, -5],
+    [5, 10, 10, 10, 10, 10, 10, 5],
+    [0, 0, 0, 0, 0, 0, 0, 0]
+]
+
+QUEEN_TABLE = [
+    [-20, -10, -10, -5, -5, -10, -10, -20],
+    [-10, 0, 0, 0, 0, 0, 0, -10],
+    [-10, 0, 5, 5, 5, 5, 0, -10],
+    [-5, 0, 5, 5, 5, 5, 0, -5],
+    [0, 0, 5, 5, 5, 5, 0, -5],
+    [-10, 5, 5, 5, 5, 5, 0, -10],
+    [-10, 0, 5, 0, 0, 0, 0, -10],
+    [-20, -10, -10, -5, -5, -10, -10, -20]
+]
+
+KING_TABLE = [
+    [20, 30, 10, 0, 0, 10, 30, 20],
+    [20, 20, 0, 0, 0, 0, 20, 20],
+    [-10, -20, -20, -20, -20, -20, -20, -10],
+    [-20, -30, -30, -40, -40, -30, -30, -20],
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-30, -40, -40, -50, -50, -40, -40, -30],
+    [-30, -40, -40, -50, -50, -40, -40, -30]
+]
+
+# Pesi, Penalità e bonus
+ISOLATED_PAWN_PENALTY = -10
+DOUBLED_PAWN_PENALTY = -5
+SEMI_OPEN_FILE_PENALTY = -15
+OPEN_FILE_PENALTY = -25
+PASSED_PAWN_BONUS = 20
+ADJACENT_PAWN_BONUS = 10
+BISHOP_PAIR_BONUS = 50
+KING_SAFETY_WEIGHT = 0.5
+MOBILITY_WEIGHT = 0.1
+QUEEN_ACTIVITY_WEIGHT = 0.5
+KNIGHT_ACTIVITY_WEIGHT = 0.3
+CENTER_CONTROL_WEIGHT = 0.5
+CENTER_SQUARES = [chess.D4, chess.D5, chess.E4, chess.E5]
 
 
 class BoardEvaluationChessGame:
-    PIECE_VALUES = {
-        chess.PAWN: 1,
-        chess.KNIGHT: 3,
-        chess.BISHOP: 3,
-        chess.ROOK: 5,
-        chess.QUEEN: 9,
-        chess.KING: 0  # Il re ha un valore speciale
-    }
-
-    # Tabelle di pezzi
-    PAWN_TABLE = [
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [5, 10, 10, -20, -20, 10, 10, 5],
-        [5, -5, -10, 0, 0, -10, -5, 5],
-        [0, 0, 0, 20, 20, 0, 0, 0],
-        [5, 5, 10, 25, 25, 10, 5, 5],
-        [10, 10, 20, 30, 30, 20, 10, 10],
-        [50, 50, 50, 50, 50, 50, 50, 50],
-        [0, 0, 0, 0, 0, 0, 0, 0]
-    ]
-
-    KNIGHT_TABLE = [
-        [-50, -40, -30, -30, -30, -30, -40, -50],
-        [-40, -20, 0, 5, 5, 0, -20, -40],
-        [-30, 5, 10, 15, 15, 10, 5, -30],
-        [-30, 0, 15, 20, 20, 15, 0, -30],
-        [-30, 5, 15, 20, 20, 15, 5, -30],
-        [-30, 0, 10, 15, 15, 10, 0, -30],
-        [-40, -20, 0, 0, 0, 0, -20, -40],
-        [-50, -40, -30, -30, -30, -30, -40, -50]
-    ]
-
-    BISHOP_TABLE = [
-        [-20, -10, -10, -10, -10, -10, -10, -20],
-        [-10, 5, 0, 0, 0, 0, 5, -10],
-        [-10, 10, 10, 10, 10, 10, 10, -10],
-        [-10, 0, 10, 10, 10, 10, 0, -10],
-        [-10, 5, 5, 10, 10, 5, 5, -10],
-        [-10, 0, 5, 10, 10, 5, 0, -10],
-        [-10, 0, 0, 0, 0, 0, 0, -10],
-        [-20, -10, -10, -10, -10, -10, -10, -20]
-    ]
-
-    ROOK_TABLE = [
-        [0, 0, 0, 5, 5, 0, 0, 0],
-        [-5, 0, 0, 0, 0, 0, 0, -5],
-        [-5, 0, 0, 0, 0, 0, 0, -5],
-        [-5, 0, 0, 0, 0, 0, 0, -5],
-        [-5, 0, 0, 0, 0, 0, 0, -5],
-        [-5, 0, 0, 0, 0, 0, 0, -5],
-        [5, 10, 10, 10, 10, 10, 10, 5],
-        [0, 0, 0, 0, 0, 0, 0, 0]
-    ]
-
-    QUEEN_TABLE = [
-        [-20, -10, -10, -5, -5, -10, -10, -20],
-        [-10, 0, 0, 0, 0, 0, 0, -10],
-        [-10, 0, 5, 5, 5, 5, 0, -10],
-        [-5, 0, 5, 5, 5, 5, 0, -5],
-        [0, 0, 5, 5, 5, 5, 0, -5],
-        [-10, 5, 5, 5, 5, 5, 0, -10],
-        [-10, 0, 5, 0, 0, 0, 0, -10],
-        [-20, -10, -10, -5, -5, -10, -10, -20]
-    ]
-
-    KING_TABLE = [
-        [20, 30, 10, 0, 0, 10, 30, 20],
-        [20, 20, 0, 0, 0, 0, 20, 20],
-        [-10, -20, -20, -20, -20, -20, -20, -10],
-        [-20, -30, -30, -40, -40, -30, -30, -20],
-        [-30, -40, -40, -50, -50, -40, -40, -30],
-        [-30, -40, -40, -50, -50, -40, -40, -30],
-        [-30, -40, -40, -50, -50, -40, -40, -30],
-        [-30, -40, -40, -50, -50, -40, -40, -30]
-    ]
-
-    # Pesi, Penalità e bonus
-    ISOLATED_PAWN_PENALTY = -10
-    DOUBLED_PAWN_PENALTY = -5
-    SEMI_OPEN_FILE_PENALTY = -15
-    OPEN_FILE_PENALTY = -25
-    PASSED_PAWN_BONUS = 20
-    ADJACENT_PAWN_BONUS = 10
-    BISHOP_PAIR_BONUS = 50
-    KING_SAFETY_WEIGHT = 0.5
-    MOBILITY_WEIGHT = 0.1
-    QUEEN_ACTIVITY_WEIGHT = 0.5
-    KNIGHT_ACTIVITY_WEIGHT = 0.3
-    CENTER_CONTROL_WEIGHT = 0.5
-    CENTER_SQUARES = [chess.D4, chess.D5, chess.E4, chess.E5]
-
     def __init__(self,
                  heuristic_piece_material_weight=0.5,
                  heuristic_piece_position_weight=0.5,
@@ -117,23 +116,23 @@ class BoardEvaluationChessGame:
         self.H_QUEEN_ACTIVITY_WEIGHT = heuristic_queen_activity_weight
         self.H_KNIGHT_ACTIVITY_WEIGHT = heuristic_king_activity_weight
 
-    def h(self, state: State):
-        board = state.game_board
-        h1 = ChessGame.game_over_eval(state.game_board)
+    def h(self, state: StateChessGame):
+        board = state.game_representation.game_board
+        h1 = state.game_over_eval()
         if h1 is not None:
             return h1
         else:
             # Combiniamo diverse metriche di valutazione
             total_evaluation = (
-                    self.piece_material_evaluation(board) * self.H_PIECE_MATERIAL_WEIGHT +
-                    self.piece_position_evaluation(board) * self.H_PIECE_POSITION_WEIGHT +
-                    self.pawn_structure_evaluation(board) * self.H_PAWN_STRUCTURE_WEIGHT +
-                    self.mobility_evaluation(board) * self.H_MOBILITY_WEIGHT +
-                    self.king_safety_evaluation(board) * self.H_KING_SAFETY_WEIGHT +
-                    self.center_control_evaluation(board) * self.H_CENTER_CONTROL_WEIGHT +
-                    self.bishop_pair_evaluation(board) * self.H_BISHOP_PAIR_WEIGHT +
-                    self.queen_activity_evaluation(board) * self.H_QUEEN_ACTIVITY_WEIGHT +
-                    self.knight_activity_evaluation(board) * self.H_KNIGHT_ACTIVITY_WEIGHT
+                    self.piece_material_evaluation(board) +
+                    self.piece_position_evaluation(board) +
+                    # self.pawn_structure_evaluation(board) +
+                    self.mobility_evaluation(board) +
+                    self.king_safety_evaluation(board) +
+                    self.center_control_evaluation(board)
+                    # self.bishop_pair_evaluation(board) +
+                    # self.queen_activity_evaluation(board) +
+                    # self.knight_activity_evaluation(board)
             )
             return total_evaluation
 
@@ -141,7 +140,7 @@ class BoardEvaluationChessGame:
         """ Valuta la scacchiera in base al materiale. """
         evaluation = 0.0
         for square, piece in board.piece_map().items():
-            piece_value = BoardEvaluationChessGame.PIECE_VALUES[piece.piece_type]
+            piece_value = PIECE_VALUES[piece.piece_type]
             if piece.color == chess.WHITE:
                 evaluation += piece_value
             else:
@@ -155,17 +154,17 @@ class BoardEvaluationChessGame:
 
         for square, piece in board.piece_map().items():
             if piece.piece_type == chess.PAWN:
-                table = BoardEvaluationChessGame.PAWN_TABLE
+                table = PAWN_TABLE
             elif piece.piece_type == chess.KNIGHT:
-                table = BoardEvaluationChessGame.KNIGHT_TABLE
+                table = KNIGHT_TABLE
             elif piece.piece_type == chess.BISHOP:
-                table = BoardEvaluationChessGame.BISHOP_TABLE
+                table = BISHOP_TABLE
             elif piece.piece_type == chess.ROOK:
-                table = BoardEvaluationChessGame.ROOK_TABLE
+                table = ROOK_TABLE
             elif piece.piece_type == chess.QUEEN:
-                table = BoardEvaluationChessGame.QUEEN_TABLE
+                table = QUEEN_TABLE
             elif piece.piece_type == chess.KING:
-                table = BoardEvaluationChessGame.KING_TABLE
+                table = KING_TABLE
 
             row = square // 8
             col = square % 8
@@ -193,14 +192,14 @@ class BoardEvaluationChessGame:
                 if col == 0 or not (board.pieces(chess.PAWN, board.piece_at(square).color) & chess.BB_FILES[col - 1]):
                     if col == 7 or not (
                             board.pieces(chess.PAWN, board.piece_at(square).color) & chess.BB_FILES[col + 1]):
-                        evaluation += BoardEvaluationChessGame.ISOLATED_PAWN_PENALTY if board.piece_at(
-                            square).color == chess.WHITE else -BoardEvaluationChessGame.ISOLATED_PAWN_PENALTY
+                        evaluation += ISOLATED_PAWN_PENALTY if board.piece_at(
+                            square).color == chess.WHITE else -ISOLATED_PAWN_PENALTY
 
                 # Verifica pedoni doppi
                 if (white_pawns if board.piece_at(square).color == chess.WHITE else black_pawns) & chess.BB_SQUARES[
                     square]:
-                    evaluation += BoardEvaluationChessGame.DOUBLED_PAWN_PENALTY if board.piece_at(
-                        square).color == chess.WHITE else -BoardEvaluationChessGame.DOUBLED_PAWN_PENALTY
+                    evaluation += DOUBLED_PAWN_PENALTY if board.piece_at(
+                        square).color == chess.WHITE else -DOUBLED_PAWN_PENALTY
 
                 # Verifica pedoni passati
                 rank = square // 8
@@ -210,14 +209,14 @@ class BoardEvaluationChessGame:
                             if black_pawns & chess.BB_RANKS[r]:
                                 break
                         else:
-                            evaluation += BoardEvaluationChessGame.PASSED_PAWN_BONUS
+                            evaluation += PASSED_PAWN_BONUS
                 else:
                     if rank > 0:
                         for r in range(0, rank):
                             if white_pawns & chess.BB_RANKS[r]:
                                 break
                         else:
-                            evaluation -= BoardEvaluationChessGame.PASSED_PAWN_BONUS
+                            evaluation -= PASSED_PAWN_BONUS
 
         return evaluation
 
@@ -232,7 +231,7 @@ class BoardEvaluationChessGame:
         board.pop()  # Torna al turno originale
 
         # Valuta la mobilità in base ai pesi
-        evaluation += BoardEvaluationChessGame.MOBILITY_WEIGHT * (white_mobility - black_mobility)
+        evaluation += MOBILITY_WEIGHT * (white_mobility - black_mobility)
 
         return evaluation
 
@@ -247,21 +246,21 @@ class BoardEvaluationChessGame:
 
         # Valuta la sicurezza del re bianco
         if board.attacks(white_king_square) & board.pieces(chess.PAWN, chess.BLACK):
-            evaluation += BoardEvaluationChessGame.OPEN_FILE_PENALTY
+            evaluation += OPEN_FILE_PENALTY
         for square in chess.SQUARES:
             if abs(square - white_king_square) in [1, 7, 8, 9] and board.piece_at(
                     square) == chess.PAWN and board.color_at(square) == chess.WHITE:
-                evaluation += BoardEvaluationChessGame.ADJACENT_PAWN_BONUS
+                evaluation += ADJACENT_PAWN_BONUS
 
         # Valuta la sicurezza del re nero
         if board.attacks(black_king_square) & board.pieces(chess.PAWN, chess.WHITE):
-            evaluation -= BoardEvaluationChessGame.OPEN_FILE_PENALTY
+            evaluation -= OPEN_FILE_PENALTY
         for square in chess.SQUARES:
             if abs(square - black_king_square) in [1, 7, 8, 9] and board.piece_at(
                     square) == chess.PAWN and board.color_at(square) == chess.BLACK:
-                evaluation -= BoardEvaluationChessGame.ADJACENT_PAWN_BONUS
+                evaluation -= ADJACENT_PAWN_BONUS
 
-        return evaluation * BoardEvaluationChessGame.KING_SAFETY_WEIGHT
+        return evaluation * KING_SAFETY_WEIGHT
 
     def center_control_evaluation(self, board):
         """ Valuta il controllo del centro. """
@@ -269,7 +268,7 @@ class BoardEvaluationChessGame:
 
         evaluation = 0.0
 
-        for square in BoardEvaluationChessGame.CENTER_SQUARES:
+        for square in CENTER_SQUARES:
             # Se una casella centrale è occupata da un pezzo, assegna un punteggio
             piece = board.piece_at(square)
             if piece:
@@ -284,7 +283,7 @@ class BoardEvaluationChessGame:
             attackers = board.attackers(chess.BLACK, square)
             evaluation -= len(attackers)
 
-        return evaluation * BoardEvaluationChessGame.CENTER_CONTROL_WEIGHT
+        return evaluation * CENTER_CONTROL_WEIGHT
 
     def bishop_pair_evaluation(self, board):
         """ Valuta la coppia di alfieri. """
@@ -297,9 +296,9 @@ class BoardEvaluationChessGame:
         black_bishops = len(board.pieces(chess.BISHOP, chess.BLACK))
 
         if white_bishops == 2:
-            evaluation += BoardEvaluationChessGame.BISHOP_PAIR_BONUS
+            evaluation += BISHOP_PAIR_BONUS
         if black_bishops == 2:
-            evaluation -= BoardEvaluationChessGame.BISHOP_PAIR_BONUS
+            evaluation -= BISHOP_PAIR_BONUS
 
         return evaluation
 
@@ -315,11 +314,11 @@ class BoardEvaluationChessGame:
         for queen_square in white_queens:
             # Ottieni tutte le caselle che la regina può attaccare da quella posizione
             legal_moves = board.attacks(queen_square)
-            evaluation += BoardEvaluationChessGame.QUEEN_ACTIVITY_WEIGHT * len(legal_moves)
+            evaluation += QUEEN_ACTIVITY_WEIGHT * len(legal_moves)
 
         for queen_square in black_queens:
             legal_moves = board.attacks(queen_square)
-            evaluation -= BoardEvaluationChessGame.QUEEN_ACTIVITY_WEIGHT * len(legal_moves)
+            evaluation -= QUEEN_ACTIVITY_WEIGHT * len(legal_moves)
 
         return evaluation
 
@@ -334,10 +333,10 @@ class BoardEvaluationChessGame:
         for knight_square in white_knights:
             # Ottieni tutte le caselle che il cavallo può attaccare da quella posizione
             legal_moves = board.attacks(knight_square)
-            evaluation += BoardEvaluationChessGame.KNIGHT_ACTIVITY_WEIGHT * len(legal_moves)
+            evaluation += KNIGHT_ACTIVITY_WEIGHT * len(legal_moves)
 
         for knight_square in black_knights:
             legal_moves = board.attacks(knight_square)
-            evaluation -= BoardEvaluationChessGame.KNIGHT_ACTIVITY_WEIGHT * len(legal_moves)
+            evaluation -= KNIGHT_ACTIVITY_WEIGHT * len(legal_moves)
 
         return evaluation

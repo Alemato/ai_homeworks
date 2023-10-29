@@ -14,10 +14,10 @@ class AStar:
 
     def evaluate(self, state):
         state.h = self.heuristic.h(state)
-        if state.parent_state is None:
+        if state.state_parent is None:
             state.g = 0
         else:
-            state.g = state.parent_state.g + self.game.const_move(state.move)
+            state.g = state.state_parent.g + self.game.const_move(state.move)
         state.f = state.h + state.g
         return state.f
 

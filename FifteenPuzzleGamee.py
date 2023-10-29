@@ -4,7 +4,7 @@ from copy import deepcopy
 from State import State
 
 
-class FifteenPuzzleGame:
+class FifteenPuzzleGamee:
     def __init__(self, game_board=None, cost_up=1, cost_down=1, cost_left=1, cost_right=1):
         self.game_board_end_game = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, "#"]]
         self.game_board_init_game_default = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], ["#", 15, 13, 14]]
@@ -112,7 +112,7 @@ class FifteenPuzzleGame:
         return set(neighbors_state)
 
     def __eq__(self, __o):
-        if not isinstance(__o, FifteenPuzzleGame):
+        if not isinstance(__o, FifteenPuzzleGamee):
             return False
         return self.game_board == __o.game_board
 

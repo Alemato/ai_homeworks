@@ -9,10 +9,10 @@ from optimized.heuristics.ManhattanDistancePuzzleGame import ManhattanDistancePu
 
 def backpath(node):
     states = [node]
-    parent = node.parent_state
+    parent = node.state_parent
     while parent is not None:
         states.append(parent)
-        parent = parent.parent_state
+        parent = parent.state_parent
     return reversed(states)
 
 

@@ -20,18 +20,16 @@ class MinMaxAlphaBetaPruning:
 
     def evaluate(self, states, parent_turn):
         for state in states:
-            if self.game.ask_draw(state.game_board):
+            if state.can_claim_draw():
                 state.h = 0.0
-                state.f = state.h
             else:
                 state.h = self.__minmax_alpha_beta(state, self.max_depth - 1, -np.inf, np.inf, not parent_turn)
-                state.f = state.h
 
     def __minmax_alpha_beta(self, state, depth, alpha, beta, turn):
         self.eval_count += 1
         neighbors = self.game.neighbors(state)
 
-        if depth == 0 or self.game.is_endgame(state.game_board):
+        if depth == 0 or state.is_endgame():
             return self.heuristic.h(state)
 
         if turn:  # Maximizing player
@@ -53,7 +51,7 @@ class MinMaxAlphaBetaPruning:
                     break
             return value
 
-    def search(self, state: State):
+    def search(self, state):
         neighbors = self.game.neighbors(state)
-        self.evaluate(neighbors, state.game_board.turn)
-        return self.pick(neighbors, state.game_board.turn)
+        self.evaluate(neighbors, state.turn())
+        return self.pick(neighbors, state.turn())
