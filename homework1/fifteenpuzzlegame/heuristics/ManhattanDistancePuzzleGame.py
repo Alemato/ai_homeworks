@@ -1,4 +1,4 @@
-from fifteenpuzzlegame import StateFifteenPuzzleGame
+from homework1.fifteenpuzzlegame import StateFifteenPuzzleGame
 
 
 class ManhattanDistancePuzzleGame:

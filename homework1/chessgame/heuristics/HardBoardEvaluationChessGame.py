@@ -1,6 +1,6 @@
 import chess
 
-from chessgame import StateChessGame
+from homework1.chessgame import StateChessGame
 
 # Dictionary defining the intrinsic values for each chess piece.
 piece_values = {

@@ -1,6 +1,6 @@
 import chess
 
-from chessgame import StateChessGame
+from homework1.chessgame import StateChessGame
 
 PIECE_VALUES = {
     chess.PAWN: 1,

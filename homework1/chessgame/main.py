@@ -3,7 +3,7 @@ import time
 from ChessGame import ChessGame
 from algoritms.MinMaxAlphaBetaPruning import MinMaxAlphaBetaPruning
 from StateChessGame import StateChessGame
-from chessgame.Agent import Agent
+from homework1.chessgame.Agent import Agent
 from heuristics.HardBoardEvaluationChessGame import HardBoardEvaluationChessGame
 
 
