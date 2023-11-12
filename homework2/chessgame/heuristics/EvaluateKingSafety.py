@@ -1,8 +1,29 @@
 import chess
+import numpy as np
 
 
+# 12.1 microsecondi
+# min = -7.5
+# max = 7.5
 class EvaluateKingSafety:
+    def __init__(self, evaluate_end_game_phase=False):
+        self.evaluate_end_game_phase = evaluate_end_game_phase
+
     def h(self, board):
+        if self.evaluate_end_game_phase:
+            game_over_eval = None
+            if board.is_checkmate():
+                outcome = board.outcome()
+                if outcome is not None:
+                    if outcome.winner:
+                        game_over_eval = np.inf
+                    else:
+                        game_over_eval = -np.inf
+            if board.is_stalemate() or board.is_insufficient_material() or board.is_seventyfive_moves() or board.is_fivefold_repetition():
+                game_over_eval = 0
+
+            if game_over_eval is not None:
+                return game_over_eval
         score = 0
         pawn_cover_score = 0.5
         attacked_square_score = -0.75

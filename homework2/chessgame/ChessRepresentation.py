@@ -93,7 +93,7 @@ class ChessRepresentation:
 
         return False
 
-    def is_draw(self):
+    def mis_draw(self):
         """
         Checks if the game is a draw based on various conditions.
         :return: True if the game is a draw, False otherwise.

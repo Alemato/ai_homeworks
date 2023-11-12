@@ -1,7 +1,15 @@
+import numpy as np
+
 from constants import *
 
+
 # 21 microsecondi
+# min = -285 -275
+# max = 420 395
 class EvaluatePiecePositions:
+
+    def __init__(self, evaluate_end_game_phase=False):
+        self.evaluate_end_game_phase = evaluate_end_game_phase
 
     def evaluate_piece_positions(self, board, piece_table, piece_type, color):
         score = 0
@@ -12,27 +20,64 @@ class EvaluatePiecePositions:
         return score
 
     def is_endgame(self, board):
-        # Limite del valore complessivo dei pezzi per considerare una partita nel finale
-        endgame_value_threshold = 13
+        # Regine
+        white_queens = len(board.pieces(chess.QUEEN, chess.WHITE))
+        black_queens = len(board.pieces(chess.QUEEN, chess.BLACK))
 
-        total_value = 0
-        for piece_type in PIECE_VALUE:
-            total_value += len(board.pieces(piece_type, chess.WHITE)) * PIECE_VALUE[piece_type]
-            total_value += len(board.pieces(piece_type, chess.BLACK)) * PIECE_VALUE[piece_type]
+        # se entrambi i lati non hanno Regine -> endgame phase
+        if white_queens == 0 and black_queens == 0:
+            return True
 
-        # Se il valore totale dei pezzi, esclusi i re, è al di sotto di una certa soglia,
-        # consideriamo la partita come nel finale.
-        is_endgame_phase = total_value <= endgame_value_threshold
+        # Minorpieces
+        white_bishops = len(board.pieces(chess.BISHOP, chess.WHITE))
+        black_bishops = len(board.pieces(chess.BISHOP, chess.BLACK))
+        white_knights = len(board.pieces(chess.KNIGHT, chess.WHITE))
+        black_knights = len(board.pieces(chess.KNIGHT, chess.BLACK))
+        white_minors = white_bishops + white_knights
+        black_minors = black_bishops + black_knights
 
-        # Ulteriori considerazioni potrebbero essere la presenza di molti pedoni, il che potrebbe
-        # suggerire che non siamo ancora nel finale tipico, anche se il valore dei pezzi è basso.
-        if len(board.pieces(chess.PAWN, chess.WHITE)) + len(board.pieces(chess.PAWN, chess.BLACK)) > 10:
-            is_endgame_phase = False
+        white_rooks = len(board.pieces(chess.ROOK, chess.WHITE))
+        black_rooks = len(board.pieces(chess.ROOK, chess.BLACK))
 
-        return is_endgame_phase
+        # se ogni lato che ha una regina, non ha altri pezzi oppure ha
+        # 1 Minorpiece al massimo -> endgame phase
+        # fmt: off
+        white_endgame_condition_with_queen = (
+                white_queens == 1 and (white_rooks == 0 and white_minors <= 1)
+        )
+        black_endgame_condition_with_queen = (
+                black_queens == 1 and (black_rooks == 0 and black_minors <= 1)
+        )
+        # fmt: on
+
+        if (
+                (white_endgame_condition_with_queen and black_queens == 0)
+                or (black_endgame_condition_with_queen and white_queens == 0)
+                or (
+                white_endgame_condition_with_queen
+                and black_endgame_condition_with_queen
+        )
+        ):
+            return True
+
+        return False
 
     # Funzione per calcolare il punteggio totale basato sulla posizione dei pezzi
     def h(self, board):
+        if self.evaluate_end_game_phase:
+            game_over_eval = None
+            if board.is_checkmate():
+                outcome = board.outcome()
+                if outcome is not None:
+                    if outcome.winner:
+                        game_over_eval = np.inf
+                    else:
+                        game_over_eval = -np.inf
+            if board.is_stalemate() or board.is_insufficient_material() or board.is_seventyfive_moves() or board.is_fivefold_repetition():
+                game_over_eval = 0
+
+            if game_over_eval is not None:
+                return game_over_eval
         total_score = 0
         if self.is_endgame(board):
             king_table_to_use = KING_ENDGAME_TABLE

@@ -15,15 +15,15 @@ class StateChessGame:
         h (float or None): A heuristic value, likely used for evaluation in search algorithms.
     """
 
-    def __init__(self, game_representation=None, state_parent=None, move=None):
+    def __init__(self, game_board=None, state_parent=None, move=None):
         """
         Initializes the chess game state.
-        :param game_representation: The chess board state.
+        :param game_board: The chess board state.
                 Defaults to a new chess board state if not provided.
         :param state_parent: The preceding state. Defaults to None.
         :param move: The move leading to this state. Defaults to None.
         """
-        self.game_representation = game_representation
+        self.game_representation = game_board
         self.parent_state = state_parent
         self.move = move
         self.h = None
