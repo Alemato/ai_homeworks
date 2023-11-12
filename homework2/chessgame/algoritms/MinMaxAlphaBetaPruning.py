@@ -38,7 +38,7 @@ class MinMaxAlphaBetaPruning:
 
     def evaluate(self, states, parent_turn):
         for state in states:
-            if state.can_claim_draw():
+            if state.game_board.can_claim_draw():
                 # If the state can claim a draw, assign a heuristic value of 0.
                 state.h = 0.0
             else:

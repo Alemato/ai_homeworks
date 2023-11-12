@@ -1,6 +1,6 @@
 import chess
 
-from chessgame import StateChessGame
+from chessgame.StateChessGame import StateChessGame
 
 
 class ChessGame:
@@ -38,3 +38,28 @@ class ChessGame:
                                       move=legal_move)
             neighbors.append(neighbor)
         return neighbors
+
+    def get_name_winner_player(self, game_board):
+        """
+        Returns the name ("White" or "Black") of the winner.
+        :return: "White" if White is the winner, "Black" if Black is the winner,
+                None if no winner.
+        """
+        if game_board.is_checkmate():
+            outcome = game_board.outcome()
+            if outcome is not None:
+                return "White" if outcome.winner else "Black"
+        return None
+
+    def get_name_winner_player(self, game_board):
+        """
+        Returns the name ("White" or "Black") of the winner.
+        :return: "White" if White is the winner, "Black" if Black is the winner,
+                None if no winner.
+        """
+        if game_board.is_checkmate():
+            outcome = game_board.outcome()
+            if outcome is not None:
+                return "White" if outcome.winner else "Black"
+        return None
+

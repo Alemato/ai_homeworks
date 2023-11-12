@@ -1,7 +1,7 @@
 import numpy as np
 
 from chessgame import StateChessGame
-from constants import *
+from .constants import *
 
 
 # 13 microsecondi

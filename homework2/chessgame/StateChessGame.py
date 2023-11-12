@@ -1,4 +1,4 @@
-from chessgame.ChessGame import ChessGame
+import chess
 
 
 class StateChessGame:
@@ -27,8 +27,7 @@ class StateChessGame:
         self.h = None
 
         if self.game_board is None:
-            chess_game = ChessGame()
-            self.game_board = chess_game.game_board
+            self.game_board = chess.Board()
 
     def __eq__(self, other):
         if not isinstance(other, StateChessGame):

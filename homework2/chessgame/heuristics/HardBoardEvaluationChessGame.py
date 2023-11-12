@@ -1,16 +1,18 @@
 import numpy as np
 
 from chessgame import StateChessGame
-from chessgame.heuristics.EvaluateBoardWithoutKing import EvaluateBoardWithoutKing
-from chessgame.heuristics.EvaluateCentralControlScore import EvaluateCentralControlScore
-from chessgame.heuristics.EvaluateKingSafety import EvaluateKingSafety
-from chessgame.heuristics.EvaluateMobility import EvaluateMobility
-from chessgame.heuristics.EvaluatePawnStructure import EvaluatePawnStructure
-from chessgame.heuristics.EvaluatePiecePositions import EvaluatePiecePositions
+from .EvaluateBoardWithoutKing import EvaluateBoardWithoutKing
+from .EvaluateCentralControlScore import EvaluateCentralControlScore
+from .EvaluateKingSafety import EvaluateKingSafety
+from .EvaluateMobility import EvaluateMobility
+from .EvaluatePawnStructure import EvaluatePawnStructure
+from .EvaluatePiecePositions import EvaluatePiecePositions
 
 
 class HardBoardEvaluationChessGame:
-    def __init__(self):
+    def __init__(self, balance_evaluation=True, print_evaluation=False):
+        self.balance_evaluation = balance_evaluation
+        self.print_evaluation = print_evaluation
         self.evaluate_board_without_king = EvaluateBoardWithoutKing(normalize_result=True)
         self.evaluate_central_control_score = EvaluateCentralControlScore(normalize_result=True)
         self.evaluate_king_safety = EvaluateKingSafety(normalize_result=True)
@@ -34,11 +36,29 @@ class HardBoardEvaluationChessGame:
         if game_over_eval is not None:
             return game_over_eval
         else:
+            board_without_king = self.evaluate_board_without_king.h(state)
+            central_control_score = self.evaluate_central_control_score.h(state)
+            king_safety = self.evaluate_king_safety.h(state)
+            mobility = self.evaluate_mobility.h(state)
+            pawn_structure = self.evaluate_pawn_structure.h(state)
+            piece_positions = self.evaluate_piece_positions.h(state)
+            if self.print_evaluation:
+                print("Valutazione: ", board_without_king, central_control_score, king_safety, mobility, pawn_structure,
+                      piece_positions)
+            if self.balance_evaluation:
+                return (
+                        board_without_king * 0.35 +  # Bilancio del materiale
+                        central_control_score * 0.20 +  # Controllo del centro
+                        king_safety * 0.15 +  # Sicurezza del re
+                        mobility * 0.10 +  # Mobilità
+                        pawn_structure * 0.10 +  # Struttura dei pedoni
+                        piece_positions * 0.10  # Posizione dei pezzi
+                )
             return (
-                    self.evaluate_board_without_king.h(state) +
-                    self.evaluate_central_control_score.h(state) +
-                    self.evaluate_king_safety.h(state) +
-                    self.evaluate_mobility.h(state) +
-                    self.evaluate_pawn_structure.h(state) +
-                    self.evaluate_piece_positions.h(state)
+                    board_without_king +
+                    central_control_score +
+                    king_safety +
+                    mobility +
+                    pawn_structure +
+                    piece_positions
             )
