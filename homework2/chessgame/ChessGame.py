@@ -1,6 +1,6 @@
 import chess
 
-from StateChessGame import StateChessGame
+from chessgame import StateChessGame
 
 
 class ChessGame:
@@ -21,6 +21,7 @@ class ChessGame:
 
         if game_board is None:
             self.game_board = chess.Board()
+
     def neighbors(self, state: StateChessGame):
         """
         Determines the neighboring states of the provided chess game state.
@@ -30,9 +31,10 @@ class ChessGame:
         neighbors = []
 
         # Iterate through all legal moves and compute the resulting game state
-        for legal_move in state.game_representation.get_all_legal_moves():
-            representation = state.game_representation.make_a_move(legal_move)
-            neighbor = StateChessGame(game_board=representation, state_parent=state,
+        for legal_move in state.game_board.legal_moves:
+            new_game_board = state.game_board.copy()
+            new_game_board.push(legal_move)
+            neighbor = StateChessGame(game_board=new_game_board, state_parent=state,
                                       move=legal_move)
             neighbors.append(neighbor)
         return neighbors

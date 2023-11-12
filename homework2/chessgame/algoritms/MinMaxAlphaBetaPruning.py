@@ -1,5 +1,7 @@
 import numpy as np
 
+from chessgame import StateChessGame
+
 
 class MinMaxAlphaBetaPruning:
     """
@@ -26,22 +28,7 @@ class MinMaxAlphaBetaPruning:
         self.prune_count = 0
         self.eval_count = 0
 
-    @staticmethod
-    def pick(states, parent_turn):
-        """
-        Picks the best state based on the heuristic values.
-
-        This function evaluates a list of game states and selects the state that optimizes
-        the current player's position.
-        If it is the maximizing player's turn (parent_turn is True), the state with the highest heuristic
-        value is chosen.
-        Otherwise, if it is the minimizing player's turn (parent_turn is False), the state with the lowest heuristic
-        value is chosen.
-
-        :param states: List of game states to pick from.
-        :param parent_turn: Indicates whose turn it is: True for maximizing player and False for minimizing player.
-        :return: The best state based on the heuristic value.
-        """
+    def pick(self, states, parent_turn):
         if parent_turn:
             # If it's the maximizing player's turn, select the state with the highest heuristic value.
             return max(states, key=lambda state: state.h)
@@ -50,16 +37,6 @@ class MinMaxAlphaBetaPruning:
             return min(states, key=lambda state: state.h)
 
     def evaluate(self, states, parent_turn):
-        """
-        Evaluates a list of game states using the Minimax algorithm with Alpha-Beta pruning.
-
-        This function evaluates a list of game states using the Minimax algorithm with Alpha-Beta pruning.
-        It assigns a heuristic value to each state based on its evaluation at a specified depth in the game tree.
-        The depth of the evaluation is determined by the 'max_depth' attribute of the object.
-
-        :param states: List of game states to evaluate.
-        :param parent_turn: Indicates whose turn it is: True for maximizing player and False for minimizing player.
-        """
         for state in states:
             if state.can_claim_draw():
                 # If the state can claim a draw, assign a heuristic value of 0.
@@ -69,24 +46,10 @@ class MinMaxAlphaBetaPruning:
                 state.h = self.__minmax_alpha_beta(state, self.max_depth - 1, -np.inf, np.inf, not parent_turn)
 
     def __minmax_alpha_beta(self, state, depth, alpha, beta, turn):
-        """
-        Recursive helper method to perform Minimax search with Alpha-Beta pruning.
-
-        This private method performs a recursive Minimax search with Alpha-Beta pruning to find the optimal move
-        in the game tree.
-        It evaluates the provided game state and returns a heuristic value based on the current player's turn.
-
-        :param state: Current game state.
-        :param depth: Current depth in the search.
-        :param alpha: Best already explored option for the maximizer.
-        :param beta: Best already explored option for the minimizer.
-        :param turn: Indicates whose turn it is: True for maximizing player and False for minimizing player.
-        :return: Heuristic value of the provided game state.
-        """
         self.eval_count += 1  # Count the number of state evaluations.
         neighbors = self.game.neighbors(state)  # Generate possible successor states.
 
-        if depth == 0 or state.is_endgame():
+        if depth == 0 or state.game_board.is_game_over():
             # Base case: If the maximum depth is reached or the state represents an endgame, return the heuristic value.
             return self.heuristic.h(state)
 
@@ -109,17 +72,7 @@ class MinMaxAlphaBetaPruning:
                     break
             return value
 
-    def search(self, state):
-        """
-        Initiates the Minimax search with Alpha-Beta pruning for a given game state.
-
-        This method initializes the Minimax search with Alpha-Beta pruning to find the best next game state based on the
-        current game state.
-        It evaluates the neighboring states, chooses the best move, and returns the resulting game state.
-
-        :param state: The game state to search from.
-        :return: Best next game state based on the Minimax algorithm with Alpha-Beta pruning.
-        """
+    def search(self, state: StateChessGame):
         neighbors = self.game.neighbors(state)  # Generate possible successor states.
-        self.evaluate(neighbors, state.turn())  # Evaluate the neighboring states using Minimax.
-        return self.pick(neighbors, state.turn())  # Choose and return the best next game state.
+        self.evaluate(neighbors, state.game_board.turn)  # Evaluate the neighboring states using Minimax.
+        return self.pick(neighbors, state.game_board.turn)  # Choose and return the best next game state.

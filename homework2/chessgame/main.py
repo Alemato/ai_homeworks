@@ -1,9 +1,10 @@
 import time
 
-from ChessGame import ChessGame
-from algoritms.MinMaxAlphaBetaPruning import MinMaxAlphaBetaPruning
-from StateChessGame import StateChessGame
 from homework1.chessgame.Agent import Agent
+
+from ChessGame import ChessGame
+from StateChessGame import StateChessGame
+from algoritms.MinMaxAlphaBetaPruning import MinMaxAlphaBetaPruning
 from heuristics.HardBoardEvaluationChessGame import HardBoardEvaluationChessGame
 
 
@@ -20,18 +21,18 @@ def main_chess_game():
     move_agent_2 = 1
     start_time = time.time()
     print("The game of chess begins!")
-    print(state.game_representation)
+    print(state.game_board)
     while not state.is_endgame():
         if turn_agent % 2:
             state = agent2.do_action(state)
             move_agent_2 += 1
-            print(state.game_representation)
+            print(state.game_board)
             print("Agent 2 (BLACK) played the move:", state.move)
             print()
         else:
             state = agent1.do_action(state)
             move_agent_1 += 1
-            print(state.game_representation)
+            print(state.game_board)
             print("Agent 1 (WHITE) played the move:", state.move)
             print()
         turn_agent = turn_agent + 1
@@ -43,9 +44,9 @@ def main_chess_game():
     end_time = time.time()
     print(f"Result in: {(end_time - start_time) * 1000:.2f}ms")
     print(
-        f"OUTCOME: {state.game_representation.game_board.outcome().termination.name}")
-    if state.game_representation.get_name_winner_player() is not None:
-        print(f"Player Win: {state.game_representation.get_name_winner_player().upper()}")
+        f"OUTCOME: {state.game_board.game_board.outcome().termination.name}")
+    if state.game_board.get_name_winner_player() is not None:
+        print(f"Player Win: {state.game_board.get_name_winner_player().upper()}")
     print(f"Number of Moves       (agent 1 WHITHE): {move_agent_1}")
     print(f"States evaluated      (agent 1 WHITHE): {agent1.search_algorithm.eval_count}")
     print(f"Pruning carried out   (agent 1 WHITHE): {agent1.search_algorithm.prune_count}")

@@ -1,18 +1,32 @@
 import chess
 import numpy as np
 
+from chessgame import StateChessGame
+
 
 # 60 microsecondi
 # min = -420
 # max = 420
 class EvaluatePawnStructure:
-    def __init__(self, evaluate_end_game_phase=False):
+    def __init__(self, evaluate_end_game_phase=False, normalize_result=False):
         self.evaluate_end_game_phase = evaluate_end_game_phase
         self.file_bb = [chess.BB_FILES[f] for f in range(8)]
         self.rank_bb = [chess.BB_RANKS[r] for r in range(8)]
         self.advance_shifts = {chess.WHITE: 8, chess.BLACK: -8}
+        self.normalize_result = normalize_result
+        self.h_max_value = 420
+        self.h_min_value = -420
 
-    def pawn_structure_score(self, pawns, color, board):
+    def h(self, state: StateChessGame):
+        if self.evaluate_end_game_phase:
+            return self.__h(state.game_board)
+        elif self.normalize_result:
+            raw_eval = self.__h(state.game_board)
+            return self.__normalize(raw_eval)
+        else:
+            return self.__h(state.game_board)
+
+    def __pawn_structure_score(self, pawns, color, board):
         score = 0
         our_pawns_bb = int(pawns)  # Convert to integer bitboard if it's not already
         all_pawns_bb = int(board.pieces(chess.PAWN, chess.WHITE)) | int(board.pieces(chess.PAWN, chess.BLACK))
@@ -49,7 +63,7 @@ class EvaluatePawnStructure:
 
         return score
 
-    def passed_pawn_score(self, our_pawns, their_pawns, color):
+    def __passed_pawn_score(self, our_pawns, their_pawns, color):
         score = 0
         their_pawns_bb = int(their_pawns)  # Assicurati che sia un bitboard intero
         for our_pawn in our_pawns:
@@ -71,7 +85,7 @@ class EvaluatePawnStructure:
 
         return score
 
-    def h(self, board):
+    def __h(self, board):
         if self.evaluate_end_game_phase:
             game_over_eval = None
             if board.is_checkmate():
@@ -90,10 +104,23 @@ class EvaluatePawnStructure:
         white_pawns = board.pieces(chess.PAWN, chess.WHITE)
         black_pawns = board.pieces(chess.PAWN, chess.BLACK)
 
-        score += self.pawn_structure_score(white_pawns, chess.WHITE, board)
-        score -= self.pawn_structure_score(black_pawns, chess.BLACK, board)
+        score += self.__pawn_structure_score(white_pawns, chess.WHITE, board)
+        score -= self.__pawn_structure_score(black_pawns, chess.BLACK, board)
 
-        score += self.passed_pawn_score(white_pawns, black_pawns, chess.WHITE)
-        score -= self.passed_pawn_score(black_pawns, white_pawns, chess.BLACK)
+        score += self.__passed_pawn_score(white_pawns, black_pawns, chess.WHITE)
+        score -= self.__passed_pawn_score(black_pawns, white_pawns, chess.BLACK)
 
         return score
+
+    def __normalize(self, value):
+        # Normalizza il valore in un range da -100 a +100
+        if value >= 0:
+            # Normalizzazione per valori positivi
+            normalized = (value / self.h_max_value) * 100
+        else:
+            # Normalizzazione per valori negativi
+            normalized = (value / abs(self.h_min_value)) * 100
+
+        # Limita il valore normalizzato tra -100 e +100
+        normalized = max(min(normalized, 100), -100)
+        return normalized

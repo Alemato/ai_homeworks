@@ -1,6 +1,6 @@
 import chess
 
-from homework1.chessgame import StateChessGame
+from chessgame import StateChessGame
 
 PIECE_VALUES = {
     chess.PAWN: 1,
@@ -107,7 +107,7 @@ class SoftBoardEvaluationChessGame:
         :param state:The current state of the chess game.
         :return: The evaluation score of the board.
         """
-        board = state.game_representation.game_board
+        board = state.game_board.game_board
         h1 = state.game_over_eval()
         if h1 is not None:
             return h1

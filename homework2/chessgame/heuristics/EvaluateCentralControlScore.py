@@ -1,15 +1,29 @@
 import chess
 import numpy as np
 
+from chessgame import StateChessGame
+
 
 # 5.64 microsecondi
 # min = -1.2
 # max = 1.2
 class EvaluateCentralControlScore:
-    def __init__(self, evaluate_end_game_phase=False):
+    def __init__(self, evaluate_end_game_phase=False, normalize_result=False):
         self.evaluate_end_game_phase = evaluate_end_game_phase
+        self.normalize_result = normalize_result
+        self.h_max_value = 1.2
+        self.h_min_value = -1.2
 
-    def h(self, board):
+    def h(self, state: StateChessGame):
+        if self.evaluate_end_game_phase:
+            return self.__h(state.game_board)
+        elif self.normalize_result:
+            raw_eval = self.__h(state.game_board)
+            return self.__normalize(raw_eval)
+        else:
+            return self.__h(state.game_board)
+
+    def __h(self, board):
         if self.evaluate_end_game_phase:
             game_over_eval = None
             if board.is_checkmate():
@@ -45,3 +59,16 @@ class EvaluateCentralControlScore:
             return score
         else:
             return -score
+
+    def __normalize(self, value):
+        # Normalizza il valore in un range da -100 a +100
+        if value >= 0:
+            # Normalizzazione per valori positivi
+            normalized = (value / self.h_max_value) * 100
+        else:
+            # Normalizzazione per valori negativi
+            normalized = (value / abs(self.h_min_value)) * 100
+
+        # Limita il valore normalizzato tra -100 e +100
+        normalized = max(min(normalized, 100), -100)
+        return normalized

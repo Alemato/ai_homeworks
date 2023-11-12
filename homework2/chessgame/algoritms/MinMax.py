@@ -1,5 +1,7 @@
 import numpy as np
 
+from chessgame import StateChessGame
+
 
 class MinMax:
     """
@@ -24,61 +26,26 @@ class MinMax:
         self.max_depth = max_depth
         self.eval_count = 0
 
-    @staticmethod
-    def pick(states, parent_turn):
-        """
-        Picks the best state based on the heuristic values.
-
-        This static method selects the best game state from a list of states based on their heuristic values.
-        The selection is determined by whether it's the maximizing player's turn or the minimizing player's turn.
-
-        :param states: List of game states to pick from.
-        :param parent_turn: Indicates whose turn it is: True for the player trying to maximize and False for
-                            the player trying to minimize.
-        :return: The best state based on the heuristic value.
-        """
+    def pick(self, states, parent_turn):
         if parent_turn:
             return max(states, key=lambda state: state.h)  # Select the state with the highest heuristic value.
         else:
             return min(states, key=lambda state: state.h)  # Select the state with the lowest heuristic value.
 
     def evaluate(self, states, parent_turn):
-        """
-        Evaluates a list of game states using the Minimax algorithm.
-
-        This method evaluates a list of game states using the Minimax algorithm, which is a decision-making algorithm in
-        game theory for minimizing the possible loss for a worst-case scenario. It assigns heuristic values to
-        each state based on the algorithm's calculations.
-
-        :param states: List of game states to evaluate.
-        :param parent_turn: Indicates whose turn it is: True for the player trying to maximize and False
-                            for the player trying to minimize.
-        """
         for state in states:
-            if state.can_claim_draw():
+            if state.game_board.can_claim_draw():
                 state.h = 0.0  # Set the heuristic value to 0 if the game can be claimed as a draw.
             else:
                 # Calculate heuristic value using Minimax.
                 state.h = self.__minmax(state, self.max_depth - 1, not parent_turn)
 
     def __minmax(self, state, depth, turn):
-        """
-        Recursive helper method to perform the Minimax search.
-
-        This private method performs a recursive Minimax search on a game tree to determine the heuristic
-        value of a given game state.
-
-        :param state: The current game state.
-        :param depth: The current depth in the search.
-        :param turn: Indicates whose turn it is: True for the player trying to maximize and False for the player
-                    trying to minimize.
-        :return: Heuristic value of the provided game state.
-        """
         self.eval_count += 1  # Increment evaluation count.
         neighbors = self.game.neighbors(state)  # Get neighboring states from the current state.
 
         # Base cases: If the search depth is 0 or if the game is in an endgame state, return the heuristic value.
-        if depth == 0 or state.is_endgame():
+        if depth == 0 or state.game_board.is_game_over():
             return self.heuristic.h(state)
 
         if turn:
@@ -92,17 +59,7 @@ class MinMax:
                 value = min(value, self.__minmax(child, depth - 1, True))  # Recursively minimize.
             return value
 
-    def search(self, state):
-        """
-        Initiates the Minimax search for a given game state.
-
-        This method initializes the Minimax search process for a given game state.
-        It calculates the heuristic values for the neighboring states and selects the best next state based
-        on the Minimax algorithm.
-
-        :param state: The game state to start the search from.
-        :return:  Best next game state based on the Minimax algorithm.
-        """
+    def search(self, state: StateChessGame):
         neighbors = self.game.neighbors(state)  # Get neighboring states from the current state.
-        self.evaluate(neighbors, state.turn())  # Calculate heuristic values for the neighbors.
-        return self.pick(neighbors, state.turn())  # Select the best next state using the Minimax algorithm.
+        self.evaluate(neighbors, state.game_board.turn)  # Calculate heuristic values for the neighbors.
+        return self.pick(neighbors, state.game_board.turn)  # Select the best next state using the Minimax algorithm.

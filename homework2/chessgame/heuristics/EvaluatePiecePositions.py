@@ -1,5 +1,6 @@
 import numpy as np
 
+from chessgame import StateChessGame
 from constants import *
 
 
@@ -8,10 +9,22 @@ from constants import *
 # max = 420 395
 class EvaluatePiecePositions:
 
-    def __init__(self, evaluate_end_game_phase=False):
+    def __init__(self, evaluate_end_game_phase=False, normalize_result=False):
         self.evaluate_end_game_phase = evaluate_end_game_phase
+        self.normalize_result = normalize_result
+        self.h_max_value = 420
+        self.h_min_value = -420
 
-    def evaluate_piece_positions(self, board, piece_table, piece_type, color):
+    def h(self, state: StateChessGame):
+        if self.evaluate_end_game_phase:
+            return self.__h(state.game_board)
+        elif self.normalize_result:
+            raw_eval = self.__h(state.game_board)
+            return self.__normalize(raw_eval)
+        else:
+            return self.__h(state.game_board)
+
+    def __evaluate_piece_positions(self, board, piece_table, piece_type, color):
         score = 0
         pieces = board.pieces(piece_type, color)
         for square in pieces:
@@ -19,7 +32,7 @@ class EvaluatePiecePositions:
             score += piece_position_value if color == chess.WHITE else -piece_position_value
         return score
 
-    def is_endgame(self, board):
+    def __is_endgame(self, board):
         # Regine
         white_queens = len(board.pieces(chess.QUEEN, chess.WHITE))
         black_queens = len(board.pieces(chess.QUEEN, chess.BLACK))
@@ -63,7 +76,7 @@ class EvaluatePiecePositions:
         return False
 
     # Funzione per calcolare il punteggio totale basato sulla posizione dei pezzi
-    def h(self, board):
+    def __h(self, board):
         if self.evaluate_end_game_phase:
             game_over_eval = None
             if board.is_checkmate():
@@ -79,22 +92,35 @@ class EvaluatePiecePositions:
             if game_over_eval is not None:
                 return game_over_eval
         total_score = 0
-        if self.is_endgame(board):
+        if self.__is_endgame(board):
             king_table_to_use = KING_ENDGAME_TABLE
         else:
             king_table_to_use = KING_INITGAME_TABLE
-        total_score += self.evaluate_piece_positions(board, PAWN_TABLE, chess.PAWN, chess.WHITE)
-        total_score += self.evaluate_piece_positions(board, KNIGHT_TABLE, chess.KNIGHT, chess.WHITE)
-        total_score += self.evaluate_piece_positions(board, BISHOP_TABLE, chess.BISHOP, chess.WHITE)
-        total_score += self.evaluate_piece_positions(board, ROOK_TABLE, chess.ROOK, chess.WHITE)
-        total_score += self.evaluate_piece_positions(board, QUEEEN_TABLE, chess.QUEEN, chess.WHITE)
-        total_score += self.evaluate_piece_positions(board, king_table_to_use, chess.KING, chess.WHITE)
+        total_score += self.__evaluate_piece_positions(board, PAWN_TABLE, chess.PAWN, chess.WHITE)
+        total_score += self.__evaluate_piece_positions(board, KNIGHT_TABLE, chess.KNIGHT, chess.WHITE)
+        total_score += self.__evaluate_piece_positions(board, BISHOP_TABLE, chess.BISHOP, chess.WHITE)
+        total_score += self.__evaluate_piece_positions(board, ROOK_TABLE, chess.ROOK, chess.WHITE)
+        total_score += self.__evaluate_piece_positions(board, QUEEEN_TABLE, chess.QUEEN, chess.WHITE)
+        total_score += self.__evaluate_piece_positions(board, king_table_to_use, chess.KING, chess.WHITE)
 
-        total_score -= self.evaluate_piece_positions(board, PAWN_TABLE, chess.PAWN, chess.BLACK)
-        total_score -= self.evaluate_piece_positions(board, KNIGHT_TABLE, chess.KNIGHT, chess.BLACK)
-        total_score -= self.evaluate_piece_positions(board, BISHOP_TABLE, chess.BISHOP, chess.BLACK)
-        total_score -= self.evaluate_piece_positions(board, ROOK_TABLE, chess.ROOK, chess.BLACK)
-        total_score -= self.evaluate_piece_positions(board, QUEEEN_TABLE, chess.QUEEN, chess.BLACK)
-        total_score -= self.evaluate_piece_positions(board, king_table_to_use, chess.KING, chess.BLACK)
+        total_score -= self.__evaluate_piece_positions(board, PAWN_TABLE, chess.PAWN, chess.BLACK)
+        total_score -= self.__evaluate_piece_positions(board, KNIGHT_TABLE, chess.KNIGHT, chess.BLACK)
+        total_score -= self.__evaluate_piece_positions(board, BISHOP_TABLE, chess.BISHOP, chess.BLACK)
+        total_score -= self.__evaluate_piece_positions(board, ROOK_TABLE, chess.ROOK, chess.BLACK)
+        total_score -= self.__evaluate_piece_positions(board, QUEEEN_TABLE, chess.QUEEN, chess.BLACK)
+        total_score -= self.__evaluate_piece_positions(board, king_table_to_use, chess.KING, chess.BLACK)
 
         return total_score
+
+    def __normalize(self, value):
+        # Normalizza il valore in un range da -100 a +100
+        if value >= 0:
+            # Normalizzazione per valori positivi
+            normalized = (value / self.h_max_value) * 100
+        else:
+            # Normalizzazione per valori negativi
+            normalized = (value / abs(self.h_min_value)) * 100
+
+        # Limita il valore normalizzato tra -100 e +100
+        normalized = max(min(normalized, 100), -100)
+        return normalized
