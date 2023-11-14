@@ -25,6 +25,8 @@ class StateChessGame:
         self.parent_state = state_parent
         self.move = move
         self.h = None
+        self.h0 = None
+        self.hl = None
 
         if self.game_board is None:
             self.game_board = chess.Board()

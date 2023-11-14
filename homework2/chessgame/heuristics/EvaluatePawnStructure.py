@@ -1,5 +1,4 @@
 import chess
-import numpy as np
 
 from chessgame import StateChessGame
 
@@ -92,9 +91,9 @@ class EvaluatePawnStructure:
                 outcome = board.outcome()
                 if outcome is not None:
                     if outcome.winner:
-                        game_over_eval = np.inf
+                        game_over_eval = float("inf")
                     else:
-                        game_over_eval = -np.inf
+                        game_over_eval = float("-inf")
             if board.is_stalemate() or board.is_insufficient_material() or board.is_seventyfive_moves() or board.is_fivefold_repetition():
                 game_over_eval = 0
 

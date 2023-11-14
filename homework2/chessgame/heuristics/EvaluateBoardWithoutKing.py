@@ -1,5 +1,3 @@
-import numpy as np
-
 from chessgame import StateChessGame
 from .constants import *
 
@@ -11,8 +9,8 @@ class EvaluateBoardWithoutKing:
     def __init__(self, evaluate_end_game_phase=False, normalize_result=False):
         self.evaluate_end_game_phase = evaluate_end_game_phase
         self.normalize_result = normalize_result
-        self.h_max_value = 9999
-        self.h_min_value = -9999
+        self.h_max_value = 99
+        self.h_min_value = -99
 
     def h(self, state: StateChessGame):
         if self.evaluate_end_game_phase:
@@ -30,9 +28,9 @@ class EvaluateBoardWithoutKing:
                 outcome = board.outcome()
                 if outcome is not None:
                     if outcome.winner:
-                        game_over_eval = np.inf
+                        game_over_eval = float("inf")
                     else:
-                        game_over_eval = -np.inf
+                        game_over_eval = float("-inf")
             if board.is_stalemate() or board.is_insufficient_material() or board.is_seventyfive_moves() or board.is_fivefold_repetition():
                 game_over_eval = 0
 
@@ -41,7 +39,7 @@ class EvaluateBoardWithoutKing:
         # Se la partita è finita, restituisce un valore molto alto o molto basso
         if board.is_game_over():
             if board.is_checkmate():
-                return -9999 if board.turn else 9999
+                return -99 if board.turn else 99
             else:
                 return 0  # Gestisce stallo e materiale insufficiente
 
