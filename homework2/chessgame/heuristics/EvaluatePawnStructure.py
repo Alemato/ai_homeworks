@@ -25,6 +25,15 @@ class EvaluatePawnStructure:
         else:
             return self.__h(state.game_board)
 
+    def h_piccolo(self, board):
+        if self.evaluate_end_game_phase:
+            return self.__h(board)
+        elif self.normalize_result:
+            raw_eval = self.__h(board)
+            return self.__normalize(raw_eval)
+        else:
+            return self.__h(board)
+
     def __pawn_structure_score(self, pawns, color, board):
         score = 0
         our_pawns_bb = int(pawns)  # Convert to integer bitboard if it's not already

@@ -21,6 +21,15 @@ class EvaluateBoardWithoutKing:
         else:
             return self.__h(state.game_board)
 
+    def h_piccolo(self, board):
+        if self.evaluate_end_game_phase:
+            return self.__h(board)
+        elif self.normalize_result:
+            raw_eval = self.__h(board)
+            return self.__normalize(raw_eval)
+        else:
+            return self.__h(board)
+
     def __h(self, board):
         if self.evaluate_end_game_phase:
             game_over_eval = None

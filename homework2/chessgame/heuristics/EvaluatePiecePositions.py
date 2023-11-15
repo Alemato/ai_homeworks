@@ -22,6 +22,15 @@ class EvaluatePiecePositions:
         else:
             return self.__h(state.game_board)
 
+    def h_piccolo(self, board):
+        if self.evaluate_end_game_phase:
+            return self.__h(board)
+        elif self.normalize_result:
+            raw_eval = self.__h(board)
+            return self.__normalize(raw_eval)
+        else:
+            return self.__h(board)
+
     def __evaluate_piece_positions(self, board, piece_table, piece_type, color):
         score = 0
         pieces = board.pieces(piece_type, color)
