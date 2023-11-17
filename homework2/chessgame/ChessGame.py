@@ -5,61 +5,56 @@ from chessgame.StateChessGame import StateChessGame
 
 class ChessGame:
     """
-    Represents a chess game that provides functionality to determine neighboring states.
+    Represents a chess game, providing functionalities to manage the game state and compute possible moves.
 
-    Methods:
-        neighbors: Computes the neighboring states of a given chess game state.
+    Attributes:
+        game_board (chess.Board): The current chess board configuration.
     """
-
     def __init__(self, game_board=None):
         """
-        Initializes the chess representation with an optional game board.
-        :param game_board: The initial state of the chess board.
-                Defaults to a new chess board if not provided.
-        """
-        self.game_board = game_board
+        Initializes a new chess game.
 
+        :param game_board: The current chess board configuration. If None, initializes a new chess board.
+        """
+        self.game_board = game_board  # The current chess board.
+
+        # If no game board is provided, initialize a new chess board.
         if game_board is None:
             self.game_board = chess.Board()
 
     def neighbors(self, state: StateChessGame):
         """
-        Determines the neighboring states of the provided chess game state.
-        :param state: The current state of the chess game.
-        :return: A list of neighboring states for the given state.
+        Generates all possible next states (neighbors) from a given state.
+
+        :param state: The current state of the chess game from which to compute neighbors.
+        :return: A list of StateChessGame objects representing possible next states.
         """
         neighbors = []
 
-        # Iterate through all legal moves and compute the resulting game state
+        # Iterate through all legal moves from the current state.
         for legal_move in state.game_board.legal_moves:
+            # Copy the current game board and make the legal move.
             new_game_board = state.game_board.copy()
             new_game_board.push(legal_move)
-            neighbor = StateChessGame(game_board=new_game_board, state_parent=state,
-                                      move=legal_move)
+
+            # Create a new StateChessGame object for the resulting game state.
+            neighbor = StateChessGame(game_board=new_game_board, state_parent=state, move=legal_move)
             neighbors.append(neighbor)
         return neighbors
 
-    def get_name_winner_player(self, game_board):
-        """
-        Returns the name ("White" or "Black") of the winner.
-        :return: "White" if White is the winner, "Black" if Black is the winner,
-                None if no winner.
-        """
-        if game_board.is_checkmate():
-            outcome = game_board.outcome()
-            if outcome is not None:
-                return "White" if outcome.winner else "Black"
-        return None
 
     def get_name_winner_player(self, game_board):
         """
-        Returns the name ("White" or "Black") of the winner.
-        :return: "White" if White is the winner, "Black" if Black is the winner,
-                None if no winner.
+        Determines the name of the winning player if the game is in checkmate.
+
+        :param game_board: The chess board to check for checkmate and winner.
+        :return: The name of the winning player ("White" or "Black") if there's a checkmate, otherwise None.
         """
+        # Check if the current game state is a checkmate.
         if game_board.is_checkmate():
+            # Get the outcome of the game.
             outcome = game_board.outcome()
             if outcome is not None:
+                # Return "White" or "Black" depending on the winner.
                 return "White" if outcome.winner else "Black"
         return None
-
