@@ -10,8 +10,8 @@ class EvaluateMobility:
     def __init__(self, evaluate_end_game_phase=False, normalize_result=False):
         self.evaluate_end_game_phase = evaluate_end_game_phase
         self.normalize_result = normalize_result
-        self.h_max_value = 168
-        self.h_min_value = -168
+        self.h_max_value = 90
+        self.h_min_value = -10
 
     def h(self, state: StateChessGame):
         if self.evaluate_end_game_phase:
@@ -27,7 +27,7 @@ class EvaluateMobility:
             return self.__h(board)
         elif self.normalize_result:
             raw_eval = self.__h(board)
-            return self.__normalize(raw_eval)
+            return self.__normalize(raw_eval, 10, -10)
         else:
             return self.__h(board)
 
@@ -59,8 +59,8 @@ class EvaluateMobility:
         mobility_balance = white_mobility - black_mobility
         return mobility_balance if board.turn == chess.WHITE else -mobility_balance
 
-    def __normalize(self, value):
-        # Normalizza il valore in un range da -100 a +100
+    def __normalize(self, value, maxv=100, minv=-100):
+        # Normalizza il valore in un range da maxv a minv
         if value >= 0:
             # Normalizzazione per valori positivi
             normalized = (value / self.h_max_value) * 100
@@ -69,5 +69,5 @@ class EvaluateMobility:
             normalized = (value / abs(self.h_min_value)) * 100
 
         # Limita il valore normalizzato tra -100 e +100
-        normalized = max(min(normalized, 100), -100)
+        normalized = max(min(normalized, maxv), minv)
         return normalized

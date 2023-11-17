@@ -8,13 +8,14 @@ from .constants import *
 
 
 class ObservationBoard:
-    def __init__(self):
-        self.evaluate_board_without_king = EvaluateBoardWithoutKing()
-        self.evaluate_central_control_score = EvaluateCentralControlScore()
-        self.evaluate_king_safety = EvaluateKingSafety()
-        self.evaluate_mobility = EvaluateMobility()
-        self.evaluate_pawn_structure = EvaluatePawnStructure()
-        self.evaluate_piece_positions = EvaluatePiecePositions()
+    def __init__(self, normalize_result=False):
+        self.normalize_result = normalize_result
+        self.evaluate_board_without_king = EvaluateBoardWithoutKing(normalize_result=normalize_result)
+        self.evaluate_central_control_score = EvaluateCentralControlScore(normalize_result=normalize_result)
+        self.evaluate_king_safety = EvaluateKingSafety(normalize_result=normalize_result)
+        self.evaluate_mobility = EvaluateMobility(normalize_result=normalize_result)
+        self.evaluate_pawn_structure = EvaluatePawnStructure(normalize_result=normalize_result)
+        self.evaluate_piece_positions = EvaluatePiecePositions(normalize_result=normalize_result)
 
     # 87 microsecondi
     def calcola_materiale_totale_spazio_attivita_pezzi_minacce_dirette(self, board):
@@ -209,18 +210,65 @@ class ObservationBoard:
 
         return sviluppo_pezzi_bianco, sviluppo_pezzi_nero
 
+    def __normalize(self, value, h_max_value, h_min_value, maxv=10, minv=-10):
+        # Controlla se l'intervallo di origine ha ampiezza zero
+        if h_max_value == h_min_value:
+            raise ValueError("Il valore massimo e minimo non possono essere uguali.")
+
+        # Calcola l'ampiezza degli intervalli
+        range_high = h_max_value - h_min_value
+        range_norm = maxv - minv
+
+        # Normalizza il valore
+        normalized_value = (((value - h_min_value) * range_norm) / range_high) + minv
+
+        return normalized_value
+
     def h_piccoli(self, board):
         # Creare un array vuoto
         risultati = []
+        if self.normalize_result:
+            res = self.calcola_materiale_totale_spazio_attivita_pezzi_minacce_dirette(board)
+            risultati.append(self.__normalize(res[0], 48, 0))
+            risultati.append(self.__normalize(res[1], 48, 0))
+            risultati.append(self.__normalize(res[2], 57, 0))
+            risultati.append(self.__normalize(res[3], 57, 0))
+            risultati.append(self.__normalize(res[4], 84, 0))
+            risultati.append(self.__normalize(res[5], 84, 0))
+            risultati.append(self.__normalize(res[6], 12, 0))
+            risultati.append(self.__normalize(res[7], 12, 0))
 
-        # Utilizzare extend per aggiungere i risultati di ciascuna funzione all'array
-        risultati.extend(self.calcola_materiale_totale_spazio_attivita_pezzi_minacce_dirette(board))
-        risultati.extend(self.calcola_sicurezza_re(board))
-        risultati.extend(self.calcola_controllo_centro(board))
-        risultati.extend(self.calcola_mossa_pedoni(board))
-        risultati.extend(self.calcola_struttura_pedoni(board))
-        risultati.extend(self.calcola_mossa_pezzi_maggiori(board))
-        risultati.extend(self.calcola_sviluppo_pezzi(board))
+            res = self.calcola_sicurezza_re(board)
+            risultati.append(self.__normalize(res[0], 4, 0))
+            risultati.append(self.__normalize(res[1], 4, 0))
+
+            res = self.calcola_controllo_centro(board)
+            risultati.append(self.__normalize(res[0], 5, 0))
+            risultati.append(self.__normalize(res[1], 5, 0))
+
+            res = self.calcola_mossa_pedoni(board)
+            risultati.append(self.__normalize(res[0], 9, 0))
+            risultati.append(self.__normalize(res[1], 9, 0))
+
+            res = self.calcola_struttura_pedoni(board)
+            risultati.append(self.__normalize(res[0], 0, h_min_value=-11))
+            risultati.append(self.__normalize(res[1], 0, h_min_value=-11))
+
+            res = self.calcola_mossa_pezzi_maggiori(board)
+            risultati.append(self.__normalize(res[0], 9, 0))
+            risultati.append(self.__normalize(res[1], 9, 0))
+
+            res = self.calcola_sviluppo_pezzi(board)
+            risultati.append(self.__normalize(res[0], 5, 0))
+            risultati.append(self.__normalize(res[1], 5, 0))
+        else:
+            risultati.extend(self.calcola_materiale_totale_spazio_attivita_pezzi_minacce_dirette(board))
+            risultati.extend(self.calcola_sicurezza_re(board))
+            risultati.extend(self.calcola_controllo_centro(board))
+            risultati.extend(self.calcola_mossa_pedoni(board))
+            risultati.extend(self.calcola_struttura_pedoni(board))
+            risultati.extend(self.calcola_mossa_pezzi_maggiori(board))
+            risultati.extend(self.calcola_sviluppo_pezzi(board))
 
         risultati.append(self.evaluate_board_without_king.h_piccolo(board))
         risultati.append(self.evaluate_central_control_score.h_piccolo(board))

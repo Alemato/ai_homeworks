@@ -10,7 +10,7 @@ class EvaluatePiecePositions:
     def __init__(self, evaluate_end_game_phase=False, normalize_result=False):
         self.evaluate_end_game_phase = evaluate_end_game_phase
         self.normalize_result = normalize_result
-        self.h_max_value = 420
+        self.h_max_value = 505
         self.h_min_value = -420
 
     def h(self, state: StateChessGame):
@@ -27,7 +27,7 @@ class EvaluatePiecePositions:
             return self.__h(board)
         elif self.normalize_result:
             raw_eval = self.__h(board)
-            return self.__normalize(raw_eval)
+            return self.__normalize(raw_eval, 10, -10)
         else:
             return self.__h(board)
 
@@ -119,8 +119,8 @@ class EvaluatePiecePositions:
 
         return total_score
 
-    def __normalize(self, value):
-        # Normalizza il valore in un range da -100 a +100
+    def __normalize(self, value, maxv=100, minv=-100):
+        # Normalizza il valore in un range da maxv a minv
         if value >= 0:
             # Normalizzazione per valori positivi
             normalized = (value / self.h_max_value) * 100
@@ -129,5 +129,5 @@ class EvaluatePiecePositions:
             normalized = (value / abs(self.h_min_value)) * 100
 
         # Limita il valore normalizzato tra -100 e +100
-        normalized = max(min(normalized, 100), -100)
+        normalized = max(min(normalized, maxv), minv)
         return normalized

@@ -13,8 +13,8 @@ class EvaluatePawnStructure:
         self.rank_bb = [chess.BB_RANKS[r] for r in range(8)]
         self.advance_shifts = {chess.WHITE: 8, chess.BLACK: -8}
         self.normalize_result = normalize_result
-        self.h_max_value = 420
-        self.h_min_value = -420
+        self.h_max_value = 430
+        self.h_min_value = -430
 
     def h(self, state: StateChessGame):
         if self.evaluate_end_game_phase:
@@ -30,7 +30,7 @@ class EvaluatePawnStructure:
             return self.__h(board)
         elif self.normalize_result:
             raw_eval = self.__h(board)
-            return self.__normalize(raw_eval)
+            return self.__normalize(raw_eval, 10, -10)
         else:
             return self.__h(board)
 
@@ -120,8 +120,8 @@ class EvaluatePawnStructure:
 
         return score
 
-    def __normalize(self, value):
-        # Normalizza il valore in un range da -100 a +100
+    def __normalize(self, value, maxv=100, minv=-100):
+        # Normalizza il valore in un range da maxv a minv
         if value >= 0:
             # Normalizzazione per valori positivi
             normalized = (value / self.h_max_value) * 100
@@ -130,5 +130,5 @@ class EvaluatePawnStructure:
             normalized = (value / abs(self.h_min_value)) * 100
 
         # Limita il valore normalizzato tra -100 e +100
-        normalized = max(min(normalized, 100), -100)
+        normalized = max(min(normalized, maxv), minv)
         return normalized
