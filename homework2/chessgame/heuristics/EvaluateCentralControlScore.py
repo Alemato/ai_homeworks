@@ -7,13 +7,36 @@ from chessgame import StateChessGame
 # min = -1.2
 # max = 1.2
 class EvaluateCentralControlScore:
+    """
+    Provides heuristic evaluation of a chess board state with a focus on the control of central squares.
+
+    Attributes:
+        evaluate_end_game_phase (bool): Flag to indicate whether to evaluate endgame phases differently.
+        normalize_result (bool): Flag to indicate whether to normalize the evaluation result.
+        h_max_value (float): Maximum heuristic value for normalization.
+        h_min_value (float): Minimum heuristic value for normalization.
+    """
+
     def __init__(self, evaluate_end_game_phase=False, normalize_result=False):
-        self.evaluate_end_game_phase = evaluate_end_game_phase
-        self.normalize_result = normalize_result
-        self.h_max_value = 1.2
-        self.h_min_value = -1.2
+        """
+        Initializes the evaluator with options for endgame evaluation and result normalization.
+
+        :param evaluate_end_game_phase: Set to True to evaluate endgame phases differently.
+        :param normalize_result: Set to True to normalize the evaluation result.
+        """
+        self.evaluate_end_game_phase = evaluate_end_game_phase  # Flag to evaluate endgame phases.
+        self.normalize_result = normalize_result  # Flag to normalize the evaluation result.
+        self.h_max_value = 1.2  # Maximum heuristic value for normalization.
+        self.h_min_value = -1.2  # Minimum heuristic value for normalization.
 
     def h(self, state: StateChessGame):
+        """
+        Evaluates the heuristic of a given game state.
+
+        :param state: StateChessGame object representing the current state of the chess game.
+        :return: The heuristic value of the state.
+        """
+        # Evaluates endgame phase or normalizes the result based on the constructor's flags.
         if self.evaluate_end_game_phase:
             return self.__h(state.game_board)
         elif self.normalize_result:
@@ -23,6 +46,13 @@ class EvaluateCentralControlScore:
             return self.__h(state.game_board)
 
     def h_piccolo(self, board):
+        """
+        Similar to h() but operates directly on a chess board and allows specifying normalization bounds.
+
+        :param board: The chess board to evaluate.
+        :return: The heuristic value of the board.
+        """
+        # Evaluates the endgame phase, normalizes the result, or provides raw evaluation.
         if self.evaluate_end_game_phase:
             return self.__h(board)
         elif self.normalize_result:
@@ -32,51 +62,59 @@ class EvaluateCentralControlScore:
             return self.__h(board)
 
     def __h(self, board):
+        """
+        Private method for raw heuristic evaluation of a board.
+
+        :param board: The chess board to evaluate.
+        :return: The raw heuristic value of the board.
+        """
+        # Special handling for endgame phase.
         if self.evaluate_end_game_phase:
             game_over_eval = None
+            # Assign extreme values for checkmate situations.
             if board.is_checkmate():
                 outcome = board.outcome()
                 if outcome is not None:
-                    if outcome.winner:
-                        game_over_eval = float("inf")
-                    else:
-                        game_over_eval = float("-inf")
+                    game_over_eval = float("inf") if outcome.winner else float("-inf")
+            # Assign zero for draw situations.
             if board.is_stalemate() or board.is_insufficient_material() or board.is_seventyfive_moves() or board.is_fivefold_repetition():
                 game_over_eval = 0
 
             if game_over_eval is not None:
                 return game_over_eval
-        # Punti assegnati per il controllo di ogni casa centrale
+
+        # Assign points for control of each central square.
         center_squares = [chess.D4, chess.E4, chess.D5, chess.E5]
         score = 0
+        central_square_control = 0.3  # Value to calibrate based on your specific heuristic.
 
-        # Valori da calibrare in base alla tua specifica euristica
-        central_square_control = 0.3
-
+        # Check if central squares are controlled by White or Black.
         for square in center_squares:
-            # Controlla se una casa centrale è controllata dai bianchi
             if board.is_attacked_by(chess.WHITE, square):
                 score += central_square_control
-
-            # Controlla se una casa centrale è controllata dai neri
             if board.is_attacked_by(chess.BLACK, square):
                 score -= central_square_control
 
-        # Adatta il punteggio al giocatore corrente
-        if board.turn == chess.WHITE:
-            return score
-        else:
-            return -score
+        # Adjust the score for the current player.
+        return score if board.turn == chess.WHITE else -score
 
     def __normalize(self, value, maxv=100, minv=-100):
-        # Normalizza il valore in un range da maxv a minv
+        """
+        Normalizes the evaluation value within a specified range.
+
+        :param value: The value to be normalized.
+        :param maxv: The maximum value for normalization. Defaults to 100.
+        :param minv: The minimum value for normalization. Defaults to -100.
+        :return: The normalized value.
+        """
+        # Normalizes the value within the range from minv to maxv.
         if value >= 0:
-            # Normalizzazione per valori positivi
+            # Normalizes positive values.
             normalized = (value / self.h_max_value) * 100
         else:
-            # Normalizzazione per valori negativi
+            # Normalizes negative values.
             normalized = (value / abs(self.h_min_value)) * 100
 
-        # Limita il valore normalizzato tra -100 e +100
+        # Limits the normalized value between minv and maxv.
         normalized = max(min(normalized, maxv), minv)
         return normalized
