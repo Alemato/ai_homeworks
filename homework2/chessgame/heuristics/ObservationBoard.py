@@ -216,7 +216,7 @@ class ObservationBoard:
                         i == 7 or colonna_pedoni_neri[i + 1] == 0)
 
         # Return the pawn structure score for both white and black players.
-        return punteggio_pedoni_bianco, punteggio_pedoni_nero
+        return abs(punteggio_pedoni_bianco), abs(punteggio_pedoni_nero)
 
     # 1.74 microsecondo
     def calcola_mossa_pezzi_maggiori(self, board):
@@ -284,31 +284,10 @@ class ObservationBoard:
         # Return the count of developed knights and bishops for both white and black players.
         return sviluppo_pezzi_bianco, sviluppo_pezzi_nero
 
-    def __normalize(self, value, h_max_value, h_min_value, maxv=10, minv=-10):
-        """
-        Normalizes a value within a specified range. This function is essential for standardizing
-        the evaluation scores to a common scale, making them comparable and interpretable regardless
-        of their original ranges.
-
-        :param value: The value to be normalized.
-        :param h_max_value: The maximum value in the original range.
-        :param h_min_value: The minimum value in the original range.
-        :param maxv: The maximum value in the normalized range. Defaults to 10.
-        :param minv: The minimum value in the normalized range. Defaults to -10.
-        :return: The normalized value.
-        """
-        # Check if the original range is zero to prevent division by zero.
-        if h_max_value == h_min_value:
-            raise ValueError("Il valore massimo e minimo non possono essere uguali.")
-
-        # Check if the original range is zero to prevent division by zero.
-        range_high = h_max_value - h_min_value
-        range_norm = maxv - minv
-
-        # Normalize the value to the specified range.
-        normalized_value = (((value - h_min_value) * range_norm) / range_high) + minv
-
-        return normalized_value
+    def __normalize(self, valore, max_val, min_val):
+        if max_val - min_val == 0:
+            return 0  # Evita la divisione per zero se min e max sono uguali
+        return (valore - min_val) / (max_val - min_val)
 
     def h_piccoli(self, board):
         """
@@ -347,8 +326,8 @@ class ObservationBoard:
             risultati.append(self.__normalize(res[1], 9, 0))
 
             res = self.calcola_struttura_pedoni(board)
-            risultati.append(self.__normalize(res[0], 0, h_min_value=-11))
-            risultati.append(self.__normalize(res[1], 0, h_min_value=-11))
+            risultati.append(self.__normalize(res[0], 11, 0))
+            risultati.append(self.__normalize(res[1], 11, 0))
 
             res = self.calcola_mossa_pezzi_maggiori(board)
             risultati.append(self.__normalize(res[0], 9, 0))
@@ -368,12 +347,12 @@ class ObservationBoard:
             risultati.extend(self.calcola_sviluppo_pezzi(board))
 
         # Append results from other evaluation components.
-        risultati.append(self.evaluate_board_without_king.h_piccolo(board))
-        risultati.append(self.evaluate_central_control_score.h_piccolo(board))
-        risultati.append(self.evaluate_king_safety.h_piccolo(board))
-        risultati.append(self.evaluate_mobility.h_piccolo(board))
-        risultati.append(self.evaluate_pawn_structure.h_piccolo(board))
-        risultati.append(self.evaluate_piece_positions.h_piccolo(board))
+        # risultati.append(self.evaluate_board_without_king.h_piccolo(board))
+        # risultati.append(self.evaluate_central_control_score.h_piccolo(board))
+        # risultati.append(self.evaluate_king_safety.h_piccolo(board))
+        # risultati.append(self.evaluate_mobility.h_piccolo(board))
+        # risultati.append(self.evaluate_pawn_structure.h_piccolo(board))
+        # risultati.append(self.evaluate_piece_positions.h_piccolo(board))
 
         # Return the resulting array.
         return risultati

@@ -3,6 +3,7 @@ import pandas as pd
 
 from chessgame import StateChessGame
 from chessgame.heuristics.ObservationBoard import ObservationBoard
+from sklearn.neural_network import MLPRegressor
 
 
 class MinMaxAlphaBetaPruningHrCut:
@@ -41,7 +42,7 @@ class MinMaxAlphaBetaPruningHrCut:
         self.eval_hr_cut_count = 0  # Count of evaluations for the h0 cutoff.
         self.prune_hr_cut_count = 0  # Count of pruned branches due to the h0 cutoff.
         self.memoization = {}  # Dictionary for storing previously calculated states.
-        self.mlp_regressor = joblib.load('mlp_regressor_model.joblib')  # Load the ML regressor model.
+        self.mlp_regressor = joblib.load('../mlp_regressor_model.joblib')  # Load the ML regressor model.
         self.observation = ObservationBoard(normalize_result=True)  # Initialize the observation board.
 
     def pick(self, states, parent_turn):
