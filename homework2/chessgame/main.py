@@ -225,7 +225,7 @@ def run_min_max_alpha_beta_pruning(setup, index):
     time_avg_a1 = time_a1 / move_agent_1
     print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
     time_avg_a2 = time_a2 / move_agent_2
-    print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
+    print(f"Result time avg A2 in: {time_avg_a2:.2f}ms")
     outcome_val = state.game_board.outcome().termination.name
     print(
         f"OUTCOME: {outcome_val}")
@@ -319,7 +319,7 @@ def run_min_max_alpha_beta_pruning_h0_cut(setup, index):
     time_avg_a1 = time_a1 / move_agent_1
     print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
     time_avg_a2 = time_a2 / move_agent_2
-    print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
+    print(f"Result time avg A2 in: {time_avg_a2:.2f}ms")
     outcome_val = state.game_board.outcome().termination.name
     print(
         f"OUTCOME: {outcome_val}")
@@ -425,7 +425,7 @@ def run_min_max_alpha_beta_pruning_hl_cut(setup, index):
     time_avg_a1 = time_a1 / move_agent_1
     print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
     time_avg_a2 = time_a2 / move_agent_2
-    print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
+    print(f"Result time avg A2 in: {time_avg_a2:.2f}ms")
     outcome_val = state.game_board.outcome().termination.name
     print(
         f"OUTCOME: {outcome_val}")
@@ -651,7 +651,7 @@ def run_min_max_alpha_beta_pruning_hr_cut(setup, index):
     time_avg_a1 = time_a1 / move_agent_1
     print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
     time_avg_a2 = time_a2 / move_agent_2
-    print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
+    print(f"Result time avg A2 in: {time_avg_a2:.2f}ms")
     outcome_val = state.game_board.outcome().termination.name
     print(
         f"OUTCOME: {outcome_val}")
@@ -684,7 +684,7 @@ def run_min_max_alpha_beta_pruning_hr_cut(setup, index):
                   'Pruning Hr carried out Agent 2']
         writer.writerow(header)
         writer.writerow([
-            f'min_max_alpha_beta_pruning_hr_cut max_depth={setup[0]} k={setup[2]} vs min_max_alpha_beta_pruning_hr_cut max_depth={setup[1]} k={setup[3]}',
+            f'min_max_alpha_beta_pruning_hr_cut max_depth={setup[0]} k={setup[2]} vs min_max_alpha_beta_pruning_hr_cut max_depth={setup[1]} k={setup[2]}',
             'MinMax Alpha Beta Pruning Hr CutOff', 'MinMax Alpha Beta Pruning Hr CutOff',
             'HardBoardEvaluationChessGame',
             'HardBoardEvaluationChessGame', setup[0], setup[2], setup[1], setup[2], outcome_val, game_win,
@@ -864,7 +864,7 @@ def run_min_max_alpha_beta_pruning_hr_vs_hl_cut(setup, index):
     time_avg_a1 = time_a1 / move_agent_1
     print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
     time_avg_a2 = time_a2 / move_agent_2
-    print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
+    print(f"Result time avg A2 in: {time_avg_a2:.2f}ms")
     outcome_val = state.game_board.outcome().termination.name
     print(
         f"OUTCOME: {outcome_val}")
@@ -903,7 +903,7 @@ def run_min_max_alpha_beta_pruning_hr_vs_hl_cut(setup, index):
             f'min_max_alpha_beta_pruning_hr_cut max_depth={setup[0]} k={setup[2]} vs min_max_alpha_beta_pruning_hl_cut max_depth={setup[1]} k={setup[2]} l={setup[3]}',
             'MinMax Alpha Beta Pruning Hr CutOff', 'MinMax Alpha Beta Pruning Hl CutOff',
             'HardBoardEvaluationChessGame',
-            'HardBoardEvaluationChessGame', setup[0], setup[2], setup[1], setup[3], setup[4], outcome_val,
+            'HardBoardEvaluationChessGame', setup[0], setup[2], setup[1], setup[2], setup[3], outcome_val,
             game_win,
             f'{time_total:.2f}ms',
             f'{time_avg_a1:.2f}ms', f'{time_avg_a2:.2f}ms', move_agent_1, move_agent_2,
@@ -974,7 +974,7 @@ def run_min_max_alpha_beta_pruning_h0_vs_normal(setup, index):
     time_avg_a1 = time_a1 / move_agent_1
     print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
     time_avg_a2 = time_a2 / move_agent_2
-    print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
+    print(f"Result time avg A2 in: {time_avg_a2:.2f}ms")
     outcome_val = state.game_board.outcome().termination.name
     print(
         f"OUTCOME: {outcome_val}")
@@ -1076,7 +1076,7 @@ def run_min_max_alpha_beta_pruning_vs_hl_cut(setup, index):
     time_avg_a1 = time_a1 / move_agent_1
     print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
     time_avg_a2 = time_a2 / move_agent_2
-    print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
+    print(f"Result time avg A2 in: {time_avg_a2:.2f}ms")
     outcome_val = state.game_board.outcome().termination.name
     print(
         f"OUTCOME: {outcome_val}")
@@ -1113,7 +1113,7 @@ def run_min_max_alpha_beta_pruning_vs_hl_cut(setup, index):
             f'min_max_alpha_beta_pruning max_depth={setup[0]} vs min_max_alpha_beta_pruning_hl_cut max_depth={setup[1]} k={setup[2]} l={setup[3]}',
             'MinMax Alpha Beta Pruning', 'MinMax Alpha Beta Pruning Hl CutOff',
             'HardBoardEvaluationChessGame',
-            'HardBoardEvaluationChessGame', setup[0], setup[1], setup[3], setup[4], outcome_val,
+            'HardBoardEvaluationChessGame', setup[0], setup[1], setup[2], setup[3], outcome_val,
             game_win,
             f'{time_total:.2f}ms',
             f'{time_avg_a1:.2f}ms', f'{time_avg_a2:.2f}ms', move_agent_1, move_agent_2,
@@ -1183,7 +1183,7 @@ def run_min_max_alpha_beta_pruning_hr_vs_normal(setup, index):
     time_avg_a1 = time_a1 / move_agent_1
     print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
     time_avg_a2 = time_a2 / move_agent_2
-    print(f"Result time avg A1 in: {time_avg_a1:.2f}ms")
+    print(f"Result time avg A2 in: {time_avg_a2:.2f}ms")
     outcome_val = state.game_board.outcome().termination.name
     print(
         f"OUTCOME: {outcome_val}")
@@ -1227,9 +1227,9 @@ def run_min_max_alpha_beta_pruning_hr_vs_normal(setup, index):
 
 
 if __name__ == '__main__':
-    # main_normal()
-    # main_h0()
-    # main_hl()
+    main_normal()
+    main_h0()
+    main_hl()
     main_h0_vs_hl()
     main_hr()
     main_h0_vs_hr()
