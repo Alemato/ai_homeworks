@@ -1,4 +1,5 @@
 import csv
+import datetime
 import os
 import time
 from concurrent.futures import ProcessPoolExecutor
@@ -9,6 +10,7 @@ from StateChessGame import StateChessGame
 from algoritms.MinMaxAlphaBetaPruning import MinMaxAlphaBetaPruning
 from algoritms.MinMaxAlphaBetaPruningH0Cut import MinMaxAlphaBetaPruningH0Cut
 from algoritms.MinMaxAlphaBetaPruningHlCut import MinMaxAlphaBetaPruningHlCut
+from chessgame.train_regressor import train_regressor
 from heuristics.HardBoardEvaluationChessGame import HardBoardEvaluationChessGame
 from heuristics.SoftBoardEvaluationChessGame import SoftBoardEvaluationChessGame
 
@@ -97,7 +99,6 @@ min_max_alpha_beta_pruning_h0_vs_hl_cut = [
     [9, 10, 3, 3, 2],
     [10, 9, 3, 3, 2],
     [10, 10, 3, 3, 2]
-
 ]
 
 
@@ -138,18 +139,12 @@ def run_min_max_alpha_beta_pruning(setup, index):
             end_time_a2 = time.time()
             time_a2 += (end_time_a2 - start_time_a2) * 1000
             move_agent_2 += 1
-            # print(state.game_board.fen())
-            print("Agent 2 (BLACK) played the move:", state.move)
-            print()
         else:
             start_time_a1 = time.time()
             state = agent1.do_action(state)
             end_time_a1 = time.time()
             time_a1 += (end_time_a1 - start_time_a1) * 1000
             move_agent_1 += 1
-            # print(state.game_board.fen())
-            print("Agent 1 (WHITE) played the move:", state.move)
-            print()
         turn_agent = turn_agent + 1
 
         if state is None:
@@ -533,3 +528,14 @@ if __name__ == '__main__':
     main_h0()
     main_hl()
     main_h0_vs_hl()
+
+    time.sleep(600)
+
+    start_time = datetime.datetime.now()
+    print(f"Addestramento iniziato a: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+    train_regressor()
+
+    end_time = datetime.datetime.now()
+    print(f"Addestramento terminato a: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Durata totale: {end_time - start_time}")
