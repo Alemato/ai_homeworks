@@ -140,12 +140,12 @@ min_max_alpha_beta_pruning_hl_vs_hr = [
     [10, 10, 3, 2]
 ]
 
-min_max_alpha_beta_pruning_vs_h0 = [
+min_max_alpha_beta_pruning_h0_vs_normal = [
     [3, 3, 5],
-    [3, 4, 5],
-    [3, 5, 5],
-    [3, 6, 3],
-    [3, 10, 3]
+    [4, 3, 5],
+    [5, 3, 5],
+    [6, 3, 3],
+    [10, 3, 3]
 ]
 
 min_max_alpha_beta_pruning_vs_hl = [
@@ -156,12 +156,12 @@ min_max_alpha_beta_pruning_vs_hl = [
     [3, 10, 3, 2]
 ]
 
-min_max_alpha_beta_pruning_vs_hr = [
+min_max_alpha_beta_pruning_hr_vs_normal = [
     [3, 3, 5],
-    [3, 4, 5],
-    [3, 5, 5],
-    [3, 6, 3],
-    [3, 10, 3]
+    [4, 3, 5],
+    [5, 3, 5],
+    [6, 3, 3],
+    [10, 3, 3]
 ]
 
 
@@ -921,7 +921,7 @@ def main_h0_vs_normal():
     with ProcessPoolExecutor(max_workers=number_of_workers) as executor:
         futures = [
             executor.submit(run_min_max_alpha_beta_pruning_h0_vs_normal, setup, index)
-            for index, setup in enumerate(min_max_alpha_beta_pruning_vs_h0)]
+            for index, setup in enumerate(min_max_alpha_beta_pruning_h0_vs_normal)]
 
         # Aspetta che tutte le esecuzioni siano completate (opzionale, a seconda del tuo caso d'uso)
         for future in futures:
@@ -1131,7 +1131,7 @@ def main_hr_vs_normal():
     with ProcessPoolExecutor(max_workers=number_of_workers) as executor:
         futures = [
             executor.submit(run_min_max_alpha_beta_pruning_hr_vs_normal, setup, index)
-            for index, setup in enumerate(min_max_alpha_beta_pruning_vs_hr)]
+            for index, setup in enumerate(min_max_alpha_beta_pruning_hr_vs_normal)]
 
         # Aspetta che tutte le esecuzioni siano completate (opzionale, a seconda del tuo caso d'uso)
         for future in futures:
