@@ -10,17 +10,10 @@ from .constants import *
 class ObservationBoard:
     """
     This class observes various aspects of a chess game board, offering a comprehensive analysis of material,
-    space, piece activity, direct threats, and specific evaluations from various components like king safety,
-    mobility, pawn structure, and piece positions.
+    space, piece activity, direct threats.
 
     Attributes:
         normalize_result (bool): If true, normalizes the evaluation score within a specific range.
-        evaluate_board_without_king (EvaluateBoardWithoutKing): Component for evaluating the board without the king.
-        evaluate_central_control_score (EvaluateCentralControlScore): Component for evaluating central control.
-        evaluate_king_safety (EvaluateKingSafety): Component for evaluating king safety.
-        evaluate_mobility (EvaluateMobility): Component for evaluating mobility.
-        evaluate_pawn_structure (EvaluatePawnStructure): Component for evaluating pawn structure.
-        evaluate_piece_positions (EvaluatePiecePositions): Component for evaluating piece positions.
     """
 
     def __init__(self, normalize_result=False):
@@ -30,13 +23,6 @@ class ObservationBoard:
         :param normalize_result: Indicates whether to normalize the evaluation scores.
         """
         self.normalize_result = normalize_result
-        # Initialize evaluation components with the option to normalize results.
-        self.evaluate_board_without_king = EvaluateBoardWithoutKing(normalize_result=normalize_result)
-        self.evaluate_central_control_score = EvaluateCentralControlScore(normalize_result=normalize_result)
-        self.evaluate_king_safety = EvaluateKingSafety(normalize_result=normalize_result)
-        self.evaluate_mobility = EvaluateMobility(normalize_result=normalize_result)
-        self.evaluate_pawn_structure = EvaluatePawnStructure(normalize_result=normalize_result)
-        self.evaluate_piece_positions = EvaluatePiecePositions(normalize_result=normalize_result)
 
     # 87 microsecondi
     def calcola_materiale_totale_spazio_attivita_pezzi_minacce_dirette(self, board):
@@ -345,14 +331,6 @@ class ObservationBoard:
             risultati.extend(self.calcola_struttura_pedoni(board))
             risultati.extend(self.calcola_mossa_pezzi_maggiori(board))
             risultati.extend(self.calcola_sviluppo_pezzi(board))
-
-        # Append results from other evaluation components.
-        # risultati.append(self.evaluate_board_without_king.h_piccolo(board))
-        # risultati.append(self.evaluate_central_control_score.h_piccolo(board))
-        # risultati.append(self.evaluate_king_safety.h_piccolo(board))
-        # risultati.append(self.evaluate_mobility.h_piccolo(board))
-        # risultati.append(self.evaluate_pawn_structure.h_piccolo(board))
-        # risultati.append(self.evaluate_piece_positions.h_piccolo(board))
 
         # Return the resulting array.
         return risultati
