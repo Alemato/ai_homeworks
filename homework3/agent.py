@@ -111,19 +111,19 @@ class Agent:
 
         return sum_returns
 
-    def improve_policy(self):
+    def improve_policy(self, iteration:int):
         n = {(state.number, action.name): 0 for state in self.states for action in self.actions}
         g = {(state.number, action.name): 0 for state in self.states for action in self.actions}
         q = {(state.number, action.name): 0 for state in self.states for action in self.actions}
         known_states = [state.number for state in self.states]
 
-        for i in range(10):
+        for i in range(iteration):
+            print(f"Iterazione: {i}/{iteration}")
             for state in self.states:
                 for action in self.actions:
                     epi = self.generate_episode(100, return_actions=True, first_state=state,
                                                 first_action=action)
                     episode, actions = self.__get_state_action_from_episodes(epi)
-                    #print(episode, actions)
                     self.reset_state()
 
                     # check if all states are known
@@ -160,3 +160,19 @@ class Agent:
 
             self.change_policy(new_policy)
         return self.policy
+
+    def __needs_extra_space(tuple_value):
+        return tuple_value[1] == 4
+    def print_policy(self, policy: np.ndarray = None):
+        # Generate the rows in a more concise way using slicing and a loop
+        rows = [list(range(i, i + 8)) for i in range(56, -1, -8)]
+
+        for row in rows:
+            for i in row:
+                print(f" {self.env_representation.action_dict[policy[self.env_representation.S[i].number]].ascii} ", end="")
+                if Agent.__needs_extra_space(self.env_representation.S[i].position):
+                    print("    ", end="")
+
+            # Simplify the condition for adding extra newlines
+            print("\n\n" if row == rows[3] else "")
+        print()
