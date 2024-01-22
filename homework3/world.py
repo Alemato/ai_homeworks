@@ -3,12 +3,6 @@ import pandas as pd
 
 from action import Action
 from state import State
-from utils import convert_to_numpy_array
-
-
-def build_action():
-    actions = []
-    actions.append(Action("left", ))
 
 
 class World:
@@ -22,7 +16,7 @@ class World:
         self.A = self.__build_actions()
         self.action_dict = {action.name: action for action in self.A}
         self.P = self.__generate_transitions()
-        self.R = None
+        self.R = self.__generate_rewards()
 
     def __build_states(self):
         states = []
@@ -55,84 +49,84 @@ class World:
             print("\n\n" if row == rows[3] else "")
         print()
 
-    def action_left(self, s: int):
-        state = self.state_dict[s]
+    def action_left(self, s: State):
+        state = self.state_dict[s.number]
         if state is None:
             raise RuntimeError("Non trovato")
         title = state.position
-        if 0 in self.am[s]:
+        if 0 in self.am[s.number]:
             title = (state.position[0], state.position[1] - 1)
         return self.state_position_dict[title]
 
-    def action_right(self, s: int):
-        state = self.state_dict[s]
+    def action_right(self, s: State):
+        state = self.state_dict[s.number]
         if state is None:
             raise RuntimeError("Non trovato")
         title = state.position
-        if 1 in self.am[s]:
+        if 1 in self.am[s.number]:
             title = (state.position[0], state.position[1] + 1)
         return self.state_position_dict[title]
 
-    def action_up(self, s: int):
-        state = self.state_dict[s]
+    def action_up(self, s: State):
+        state = self.state_dict[s.number]
         if state is None:
             raise RuntimeError("Non trovato")
         title = state.position
-        if 2 in self.am[s]:
+        if 2 in self.am[s.number]:
             title = (state.position[0] + 1, state.position[1])
         return self.state_position_dict[title]
 
-    def action_down(self, s: int):
-        state = self.state_dict[s]
+    def action_down(self, s: State):
+        state = self.state_dict[s.number]
         if state is None:
             raise RuntimeError("Non trovato")
         title = state.position
-        if 3 in self.am[s]:
+        if 3 in self.am[s.number]:
             title = (state.position[0] - 1, state.position[1])
         return self.state_position_dict[title]
 
-    def action_take_whiskr(self, s: int):
-        state = self.state_dict[s]
+    def action_take_whiskr(self, s: State):
+        state = self.state_dict[s.number]
         if state is None:
             raise RuntimeError("Non trovato")
         title = state.position
-        if 4 in self.am[s]:
-            if s == 16:
+        if 4 in self.am[s.number]:
+            if s.number == 16:
                 title = self.state_dict[48].position
-            elif s == 22:
+            elif s.number == 22:
                 title = self.state_dict[54].position
         return self.state_position_dict[title]
 
-    def action_go_right(self, s: int):
-        state = self.state_dict[s]
+    def action_go_right(self, s: State):
+        state = self.state_dict[s.number]
         if state is None:
             raise RuntimeError("Non trovato")
         title = state.position
-        if 5 in self.am[s]:
-            if s == 11:
+        if 5 in self.am[s.number]:
+            if s.number == 11:
                 title = self.state_dict[23].position
-            elif s == 43:
+            elif s.number == 43:
                 title = self.state_dict[55].position
         return self.state_position_dict[title]
 
-    def action_go_left(self, s: int):
-        state = self.state_dict[s]
+    def action_go_left(self, s: State):
+        state = self.state_dict[s.number]
         if state is None:
             raise RuntimeError("Non trovato")
         title = state.position
-        if 6 in self.am[s]:
-            if s == 23:
+        if 6 in self.am[s.number]:
+            if s.number == 23:
                 title = self.state_dict[11].position
-            elif s == 55:
+            elif s.number == 55:
                 title = self.state_dict[43].position
         return self.state_position_dict[title]
 
-    def action_cook(self, s: int):
-        state = self.state_dict[s]
+    def action_cook(self, s: State):
+        state = self.state_dict[s.number]
         if state is None:
             raise RuntimeError("Non trovato")
         title = state.position
-        if 7 in self.am[s]:
+        if 7 in self.am[s.number]:
             title = state.position
         return self.state_position_dict[title]
 
@@ -217,7 +211,7 @@ class World:
         }
         return states_actions_mapping
 
-    def __get_possible_actions_from_state(self, s: int, mapping: dict):
+    def __get_possible_actions_from_state(self, s: int, mapping: np.ndarray):
         actions = []
         for a in self.A:
             if mapping[s, a.number] > 0.0:
@@ -237,10 +231,14 @@ class World:
                 array[s, a] = prob
         return array
 
-    def __generate_transitions(self):
+    def __convert_s_a_mapping_to_numpy_arrays(self):
         s = np.array(list(self.state_dict.keys()), dtype=np.int64)
         a = np.array([0, 1, 2, 3, 4, 5, 6, 7], dtype=np.int64)
         mapping = self.__convert_to_numpy_array(self.am, s, a)
+        return s, a, mapping
+
+    def __generate_transitions(self):
+        s,  a, mapping = self.__convert_s_a_mapping_to_numpy_arrays()
 
         transitions = np.zeros(
             shape=(len(self.A), len(self.S), len(self.S)), dtype=np.float64
@@ -252,12 +250,18 @@ class World:
                     # l'azione `action` è possibile dallo stato `state`
                     # non ci sono effetti imprevisti, c'è solo uno stato destinazione
                     # raggiungibile con probabilità 1
-                    transitions[action.number, state.number, action.function(state.number).number] = 1
+                    transitions[action.number, state.number, action.function(state).number] = 1
 
         return transitions
 
+    def __get_number_action(self, action: str):
+        if action in self.action_dict.keys():
+            return self.action_dict[action].number
+        else:
+            raise ValueError("Azione Non trovata")
+
     def print_transitions_matrix(self, action=None):
-        df = pd.DataFrame(self.P[self.action_dict[action].number])
+        df = pd.DataFrame(self.P[self.__get_number_action(action)])
 
         df["Stati"] = df.index
         df["Stati"] = "s" + df["Stati"].astype(str)
@@ -265,3 +269,25 @@ class World:
         df.rename(columns=lambda x: f"s{x}", inplace=True)
 
         return df
+
+    def __get_probs(self, mapping: np.ndarray, a: int, s: int):
+        return mapping[s, a]
+
+    def __generate_rewards(self):
+        s, a, mapping = self.__convert_s_a_mapping_to_numpy_arrays()
+        rewards = np.zeros(shape=(len(self.S), len(self.A), len(self.S)), dtype=np.float64)
+        rewards[62, self.__get_number_action('cook'), 62] = 100
+        rewards[56, self.__get_number_action('cook'), 56] = -1
+
+        rewards[16, self.__get_number_action('take_whiskr'), 48] = 50
+        rewards[22, self.__get_number_action('take_whiskr'), 54] = 50
+
+        for s in self.S:
+            for a in self.A:
+                # settiamo il reward a -1 se l'azione `a` non è valida
+                # nello stato `s`
+                # (ovvero quando non è possibile eseguire l'azione
+                # `a` dallo stato `s`)
+                if self.__get_probs(mapping, a.number, s.number) == 0.0:
+                    rewards[s.number, a.number, s.number] = -1
+        return rewards
