@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Callable
 
 import numpy as np
@@ -160,6 +161,68 @@ class Agent:
 
             self.change_policy(new_policy)
         return self.policy
+
+    def __epsilon_greedy(self, q: np.ndarray, epsilon: float):
+        pi = np.zeros(len(self.states), dtype=np.int64)
+        for s in self.states:
+            pi[s.number] = np.random.choice(
+                [np.argmax(q[s.number]), np.random.choice(self.actions_number_dict.keys())],
+                p=[1 - epsilon, epsilon],
+            )
+        return pi
+
+    def monte_carlo_online_control(self, iteration:int, gamma: float):
+        n = np.zeros(shape=(len(self.env_representation.S), len(self.actions)), dtype=np.int64)
+        q = np.zeros(shape=(len(self.env_representation.S), len(self.actions)), dtype=np.float64)
+        known_states = [state.number for state in self.states]
+        k = 1
+        epsilon = 1 / k
+        pi = self.__epsilon_greedy(q, epsilon)
+        while k <= iteration:
+            print(f"Iterazione: {i}/{iteration}")
+            i = k
+            for state in self.states:
+                for action in self.actions:
+                    qk = deepcopy(q)
+                    epi = self.generate_episode(100, return_actions=True, first_state=state,
+                                        first_action=action)
+                    self.reset_state()
+                    g_k = 0
+                    visited = []
+                    for t in reversed(range(0, len(epi))):
+                        s_t = epi[t]["s"]
+                        a_t = epi[t]["a"]
+                        r_t = self.env_representation.R[s_t, a_t.number, a_t.function(s_t).number]
+                        g_k += (gamma ** t) * r_t
+                        if (s_t, a_t) not in visited:
+                            # first visit per la coppia (s, a) nell'episodio k
+                            n[s_t, a_t.number] += 1
+                            q[s_t, a_t.number] = qk[s_t, a_t.name] + (1 / n[s_t, a_t.number]) * (
+                                    g_k - qk[s_t, a_t.number]
+                            )
+                            visited.append((s_t, a_t.number))
+                    i += 1
+                    epsilon = 1 / i
+
+                    # Policy Improvement
+                    pi = self.__epsilon_greedy(q, epsilon)
+            k += 1
+            epsilon = 1 / k
+
+            # Policy Improvement
+            pi = self.__epsilon_greedy(q, epsilon)
+
+        print('PI')
+        print(pi)
+        new_policy = self.policy.copy()
+        for s in self.states:
+            for action in self.actions:
+                new_policy[(s.number, action.name)] = 1 if action.number == pi[s.number] else 0
+        self.change_policy(new_policy)
+        return self.policy
+
+
+
 
     def __needs_extra_space(tuple_value):
         return tuple_value[1] == 4
