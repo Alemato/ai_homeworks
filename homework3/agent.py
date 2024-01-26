@@ -1,3 +1,4 @@
+import random
 from copy import deepcopy
 from typing import Callable
 
@@ -7,12 +8,14 @@ from world import World
 
 
 class Agent:
-    def __init__(self, policy_function: Callable, discount_factor=0.5, starting_state_index=19, world=None):
+    def __init__(self, policy_function: Callable, discount_factor=0.5, epsilon=0.1, starting_state_index=19,
+                 world=None):
         if world is not None:
             self.env_representation: world
         else:
             self.env_representation = World()
         self.discount_factor = discount_factor
+        self.epsilon = epsilon
         self.starting_state = self.env_representation.state_dict[starting_state_index]
         self.actions = self.env_representation.A
         self.actions_number_dict = {action.number: action for action in self.actions}
@@ -99,20 +102,22 @@ class Agent:
         self.policy = new_policy
         self.easy_policy = self.get_easy_policy()
 
-    def compute_returns(self, episode: list, index: int):
-        if index == None:
+    def compute_returns(self, episode: list, index: int, gamma: float):
+        if index is None or index >= len(episode):
             return 0
-        episode = episode[index:]
+
         sum_returns = 0
-        for i in range(0, len(episode)):
-            state = self.env_representation.state_dict[episode[i]['s']]
-            sum_returns += self.env_representation.R[
-                               episode[i]['s'], episode[i]['a'].number, episode[i]['a'].function(state).number] * (
-                                   self.discount_factor ** i)
+        for i in range(len(episode) - index):
+            state = self.env_representation.state_dict[episode[index + i]['s']]
+            reward = self.env_representation.R[
+                episode[index + i]['s'], episode[index + i]['a'].number, episode[index + i]['a'].function(state).number]
+            sum_returns += reward * (gamma ** i)
 
         return sum_returns
 
-    def improve_policy(self, iteration:int):
+    def improve_policy(self, iteration: int, gamma=None):
+        if gamma is None:
+            gamma = self.discount_factor
         n = {(state.number, action.name): 0 for state in self.states for action in self.actions}
         g = {(state.number, action.name): 0 for state in self.states for action in self.actions}
         q = {(state.number, action.name): 0 for state in self.states for action in self.actions}
@@ -139,10 +144,9 @@ class Agent:
                     ## COMPUTATION OF Q-VALUES
                     for j in range(len(episode)):
                         n[(episode[j], actions[j].name)] += 1
-                        g[(episode[j], actions[j].name)] += self.compute_returns(epi, j)
+                        g[(episode[j], actions[j].name)] += self.compute_returns(epi, j, gamma)
                         q[(episode[j], actions[j].name)] = g[(episode[j], actions[j].name)] / n[
                             (episode[j], actions[j].name)]
-        print(q)
         ## POLICY IMPROVEMENT
         for state_no, ac in q.keys():
             if state_no not in [s.number for s in self.states]:
@@ -162,77 +166,74 @@ class Agent:
             self.change_policy(new_policy)
         return self.policy
 
-    def __epsilon_greedy(self, q: np.ndarray, epsilon: float):
-        pi = np.zeros(len(self.states), dtype=np.int64)
-        for s in self.states:
+    def __epsilon_greedy_policy(self, q: dict, epsilon: float):
+        pi = {}
+        for s in self.env_representation.S:
             pi[s.number] = np.random.choice(
-                [np.argmax(q[s.number]), np.random.choice(self.actions_number_dict.keys())],
-                p=[1 - epsilon, epsilon],
-            )
+                [self.__argmax(q, s.number), random.choice(self.actions).name],
+                p=[1 - epsilon, epsilon])
         return pi
 
-    def monte_carlo_online_control(self, iteration:int, gamma: float):
-        n = np.zeros(shape=(len(self.env_representation.S), len(self.actions)), dtype=np.int64)
-        q = np.zeros(shape=(len(self.env_representation.S), len(self.actions)), dtype=np.float64)
-        known_states = [state.number for state in self.states]
+    def __argmax(self, q: dict, s: int):
+        chiavi_filtrate = [chiave for chiave in q if chiave[0] == s]
+        chiave_max = max(chiavi_filtrate, key=lambda k: q[k])
+        return chiave_max[1]
+
+    def __generate_episode_from_pi(self, pi: dict):
+        episode = []
+        for s, a in pi.items():
+            episode.append({'s': s, 'a': self.env_representation.action_dict[a]})
+        return episode
+
+    def monte_carlo_online_control_on_policy_improvement(self, iterations: int, gamma=None):
+        if gamma is None:
+            gamma = self.discount_factor
+        q = {(state.number, action.name): 0 for state in self.states for action in self.actions}
+        n = {(state.number, action.name): 0 for state in self.states for action in self.actions}
         k = 1
         epsilon = 1 / k
-        pi = self.__epsilon_greedy(q, epsilon)
-        while k <= iteration:
-            print(f"Iterazione: {i}/{iteration}")
-            i = k
-            for state in self.states:
-                for action in self.actions:
-                    qk = deepcopy(q)
-                    epi = self.generate_episode(100, return_actions=True, first_state=state,
-                                        first_action=action)
-                    self.reset_state()
-                    g_k = 0
-                    visited = []
-                    for t in reversed(range(0, len(epi))):
-                        s_t = epi[t]["s"]
-                        a_t = epi[t]["a"]
-                        r_t = self.env_representation.R[s_t, a_t.number, a_t.function(s_t).number]
-                        g_k += (gamma ** t) * r_t
-                        if (s_t, a_t) not in visited:
-                            # first visit per la coppia (s, a) nell'episodio k
-                            n[s_t, a_t.number] += 1
-                            q[s_t, a_t.number] = qk[s_t, a_t.name] + (1 / n[s_t, a_t.number]) * (
-                                    g_k - qk[s_t, a_t.number]
-                            )
-                            visited.append((s_t, a_t.number))
-                    i += 1
-                    epsilon = 1 / i
+        pi = self.__epsilon_greedy_policy(q, epsilon)
 
-                    # Policy Improvement
-                    pi = self.__epsilon_greedy(q, epsilon)
+        while k <= iterations:
+            state_visited = []
+            episode = self.__generate_episode_from_pi(pi)
+            q_k = deepcopy(q)
+            g_k = 0
+            for t in reversed(range(0, len(episode))):
+                s_t = episode[t]['s']
+                a_t = episode[t]['a']
+                r_t = self.env_representation.R[
+                    s_t, a_t.number, a_t.function(self.env_representation.state_dict[s_t]).number]
+                g_k += (gamma ** t) * r_t
+                if (s_t, a_t.name) not in state_visited:
+                    n[s_t, a_t.name] += 1
+                    q[s_t, a_t.name] = q_k[s_t, a_t.name] + (1 / n[s_t, a_t.name]) * (g_k - q_k[s_t, a_t.name])
+                    state_visited.append((s_t, a_t.name))
             k += 1
+            print(f"Iterazione: {k}/{iterations}")
             epsilon = 1 / k
+            pi = self.__epsilon_greedy_policy(q, epsilon)
 
-            # Policy Improvement
-            pi = self.__epsilon_greedy(q, epsilon)
-
-        print('PI')
-        print(pi)
+        # Policy Improvement
         new_policy = self.policy.copy()
-        for s in self.states:
+        for state_no in self.states:
             for action in self.actions:
-                new_policy[(s.number, action.name)] = 1 if action.number == pi[s.number] else 0
+                new_policy[(state_no.number, action.name)] = 1 if action.name == pi[state_no.number] else 0
+
         self.change_policy(new_policy)
         return self.policy
 
-
-
-
     def __needs_extra_space(tuple_value):
         return tuple_value[1] == 4
+
     def print_policy(self, policy: np.ndarray = None):
         # Generate the rows in a more concise way using slicing and a loop
         rows = [list(range(i, i + 8)) for i in range(56, -1, -8)]
 
         for row in rows:
             for i in row:
-                print(f" {self.env_representation.action_dict[policy[self.env_representation.S[i].number]].ascii} ", end="")
+                print(f" {self.env_representation.action_dict[policy[self.env_representation.S[i].number]].ascii} ",
+                      end="")
                 if Agent.__needs_extra_space(self.env_representation.S[i].position):
                     print("    ", end="")
 

@@ -276,21 +276,21 @@ class World:
     def __generate_rewards(self):
         s, a, mapping = self.__convert_s_a_mapping_to_numpy_arrays()
         rewards = np.zeros(shape=(len(self.S), len(self.A), len(self.S)), dtype=np.float64)
-        rewards[62, self.__get_number_action('cook'), 62] = 1000
+        rewards[62, self.__get_number_action('cook'), 62] = 100
         rewards[56, self.__get_number_action('cook'), 56] = -10
 
-        rewards[16, self.__get_number_action('take_whiskr'), 48] = 500
-        rewards[22, self.__get_number_action('take_whiskr'), 54] = 500
+        rewards[16, self.__get_number_action('take_whiskr'), 48] = 50
+        rewards[22, self.__get_number_action('take_whiskr'), 54] = 50
 
         rewards[11, self.__get_number_action('go_right'), 23] = 1
         rewards[43, self.__get_number_action('go_right'), 55] = 1
 
         for s in self.S:
             for a in self.A:
-                # settiamo il reward a -1 se l'azione `a` non è valida
+                # settiamo il reward a -10 se l'azione `a` non è valida
                 # nello stato `s`
                 # (ovvero quando non è possibile eseguire l'azione
                 # `a` dallo stato `s`)
                 if self.__get_probs(mapping, a.number, s.number) == 0.0:
-                    rewards[s.number, a.number, s.number] = -10
+                    rewards[s.number, a.number, s.number] = -1
         return rewards
