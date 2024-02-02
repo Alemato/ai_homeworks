@@ -1,4 +1,4 @@
-## Homeworks for [DT0171] ARTIFICIAL INTELLIGENCE 
+## Homeworks for [DT0171] ARTIFICIAL INTELLIGENCE 2023/2024
 
 Contiene gli Homework per l'esame di **[DT0171] ARTIFICIAL INTELLIGENCE**
 
